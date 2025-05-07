@@ -1,0 +1,28 @@
+<.header>
+  Streak {@streak.id}
+  <:subtitle>This is a streak record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/streaks/#{@streak}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit streak</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name">{@streak.name}</:item>
+  <:item title="Year">{@streak.year}</:item>
+  <:item title="Days">{@streak.days}</:item>
+</.list>
+
+<.back navigate={~p"/streaks"}>Back to streaks</.back>
+
+<.modal :if={@live_action == :edit} id="streak-modal" show on_cancel={JS.patch(~p"/streaks/#{@streak}")}>
+  <.live_component
+    module={StreaksWeb.StreakLive.FormComponent}
+    id={@streak.id}
+    title={@page_title}
+    action={@live_action}
+    streak={@streak}
+    patch={~p"/streaks/#{@streak}"}
+  />
+</.modal>

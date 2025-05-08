@@ -6,7 +6,6 @@
 
 alias Streaks.Accounts
 import Ecto.Changeset
-import Ecto.Query
 
 email = "admin@gmail.com"
 password = "password1234"

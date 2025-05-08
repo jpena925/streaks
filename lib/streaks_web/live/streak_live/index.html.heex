@@ -2,12 +2,22 @@
   <%= for {_id, streak} <- @streams.streaks do %>
     <.live_component module={StreaksWeb.StreakLive.GridComponent} id={streak.id} streak={streak} />
   <% end %>
-  <div class="streak-card add-new" style="display: flex; align-items: center; justify-content: center; width: 150px; height: 150px; border: 2px dashed #ccc; border-radius: 8px; cursor: pointer;">
-    <.link patch={~p"/streaks/new"} style="font-size: 48px; color: #888; text-decoration: none;">+</.link>
+  <div
+    class="streak-card add-new"
+    style="display: flex; align-items: center; justify-content: center; width: 150px; height: 150px; border: 2px dashed #ccc; border-radius: 8px; cursor: pointer;"
+  >
+    <.link patch={~p"/streaks/new"} style="font-size: 48px; color: #888; text-decoration: none;">
+      +
+    </.link>
   </div>
 </div>
 
-<.modal :if={@live_action in [:new, :edit]} id="streak-modal" show on_cancel={JS.patch(~p"/streaks")}>
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="streak-modal"
+  show
+  on_cancel={JS.patch(~p"/streaks")}
+>
   <.live_component
     module={StreaksWeb.StreakLive.FormComponent}
     id={@streak.id || :new}

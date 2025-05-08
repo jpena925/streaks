@@ -17,14 +17,14 @@ user =
   if user do
     user
   else
-    {:ok, user} = Accounts.register_user(%{
-      email: email,
-      password: password,
-      password_confirmation: password
-    })
+    {:ok, user} =
+      Accounts.register_user(%{
+        email: email,
+        password: password,
+        password_confirmation: password
+      })
+
     user
   end
 
-Streaks.Repo.update!(
-  change(user, confirmed_at: DateTime.truncate(DateTime.utc_now(), :second))
-)
+Streaks.Repo.update!(change(user, confirmed_at: DateTime.truncate(DateTime.utc_now(), :second)))

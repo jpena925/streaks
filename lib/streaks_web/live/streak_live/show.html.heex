@@ -16,7 +16,12 @@
 
 <.back navigate={~p"/streaks"}>Back to streaks</.back>
 
-<.modal :if={@live_action == :edit} id="streak-modal" show on_cancel={JS.patch(~p"/streaks/#{@streak}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="streak-modal"
+  show
+  on_cancel={JS.patch(~p"/streaks/#{@streak}")}
+>
   <.live_component
     module={StreaksWeb.StreakLive.FormComponent}
     id={@streak.id}

@@ -3,11 +3,26 @@ name: run tests
 on:
   push:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: streaks_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
 
     steps:
       - uses: actions/checkout@v4
@@ -15,14 +30,20 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.18'
-          otp-version: '26'
+          elixir-version: "1.18.2"
+          otp-version: "27.2"
 
       - name: install depenencies
         run: mix deps.get
 
       - name: check formatting
         run: mix format --check-formatted
+
+      - name: Check Credo
+        run: mix credo --format=oneline
+
+      - name: Check Security Scan
+        run: mix security.scan
 
       - name: run tests
         run: mix test

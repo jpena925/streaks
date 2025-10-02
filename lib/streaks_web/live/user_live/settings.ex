@@ -1,7 +1,7 @@
 defmodule StreaksWeb.UserLive.Settings do
   use StreaksWeb, :live_view
 
-  on_mount {StreaksWeb.UserAuth, :require_sudo_mode}
+  on_mount {StreaksWeb.UserAuth, :require_authenticated}
 
   alias Streaks.Accounts
 

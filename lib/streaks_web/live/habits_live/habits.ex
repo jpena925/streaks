@@ -107,52 +107,91 @@ defmodule StreaksWeb.HabitsLive.Habits do
 
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50 py-8">
-      <div class="mx-auto max-w-6xl px-4">
-        <div class="mb-8 flex items-center justify-between">
-          <h1 class="text-3xl font-bold text-gray-900">Your Streaks</h1>
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-10 flex items-center justify-between">
+          <div>
+            <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Your Streaks</h1>
+            <p class="mt-2 text-sm text-gray-600">Build consistency, one day at a time</p>
+          </div>
 
           <button
             :if={!@show_new_habit_form}
             phx-click="show_new_habit_form"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            class="group relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
-            Add New Habit
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+              </path>
+            </svg>
+            Add Habit
           </button>
         </div>
         
     <!-- New Habit Form -->
-        <div :if={@show_new_habit_form} class="mb-6 p-4 bg-white rounded-lg shadow">
-          <form phx-submit="create_habit" class="flex gap-2">
+        <div
+          :if={@show_new_habit_form}
+          class="mb-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Habit</h3>
+          <form phx-submit="create_habit" class="flex gap-3">
             <input
               type="text"
               name="habit[name]"
               value={@new_habit_name}
-              placeholder="Enter habit name..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., Morning workout, Read for 30 minutes..."
+              class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               required
+              autofocus
             />
             <button
               type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg"
             >
               Create
             </button>
             <button
               type="button"
               phx-click="hide_new_habit_form"
-              class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-3 rounded-xl transition-all duration-200"
             >
               Cancel
             </button>
           </form>
         </div>
         
-    <!-- Habits List -->
-        <div :if={@habits == []} class="text-center py-12">
-          <p class="text-gray-500 text-lg">No habits yet. Create your first habit to get started!</p>
+    <!-- Empty State -->
+        <div :if={@habits == []} class="text-center py-20">
+          <svg
+            class="mx-auto h-16 w-16 text-gray-400 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            >
+            </path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No habits yet</h3>
+          <p class="text-gray-600 mb-6">Create your first habit to start building your streaks!</p>
+          <button
+            phx-click="show_new_habit_form"
+            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-200"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+              </path>
+            </svg>
+            Create Your First Habit
+          </button>
         </div>
-
+        
+    <!-- Habits List -->
         <div class="space-y-6">
           <.habit_component
             :for={habit <- @habits}
@@ -165,14 +204,12 @@ defmodule StreaksWeb.HabitsLive.Habits do
     """
   end
 
-  # Helper function to calculate completion dates for a habit
   defp get_completion_dates(habit) do
     habit.completions
     |> Enum.map(& &1.completed_on)
     |> MapSet.new()
   end
 
-  # Habit component
   attr :habit, :map, required: true
   attr :current_user, :map, required: true
 
@@ -192,8 +229,9 @@ defmodule StreaksWeb.HabitsLive.Habits do
       |> assign(:today, today)
 
     ~H"""
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex items-center justify-between mb-4">
+    <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-4 flex-1">
           <!-- Editable habit name -->
           <input
@@ -201,33 +239,51 @@ defmodule StreaksWeb.HabitsLive.Habits do
             value={@habit.name}
             phx-blur="rename_habit"
             phx-value-id={@habit.id}
-            class="text-xl font-bold text-gray-900 bg-transparent border-none outline-none focus:bg-gray-50 focus:px-2 focus:py-1 rounded"
-            style="width: auto; min-width: 100px;"
+            class="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none focus:bg-gray-50 focus:px-3 focus:py-2 rounded-lg transition-all"
+            style="width: auto;"
           />
           
-    <!-- Current streak badge -->
-          <span class={[
-            "px-3 py-1 rounded-full text-xs font-bold",
-            if(@streaks.current_streak > 0,
-              do: "bg-green-100 text-green-800",
-              else: "bg-gray-100 text-gray-600"
-            )
-          ]}>
-            {@streaks.current_streak} DAY STREAK
-          </span>
-          
+    <!-- Stats -->
+          <div class="flex items-center gap-3">
+            <!-- Current streak badge -->
+            <div class={[
+              "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-sm",
+              if(@streaks.current_streak > 0,
+                do: "bg-gradient-to-r from-green-400 to-emerald-500 text-white",
+                else: "bg-gray-100 text-gray-600"
+              )
+            ]}>
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z">
+                </path>
+              </svg>
+              <span>
+                {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
+              </span>
+            </div>
+            
     <!-- Longest streak -->
-          <span class="text-sm text-gray-500">
-            Best: {@streaks.longest_streak} days
-          </span>
+            <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-semibold text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                >
+                </path>
+              </svg>
+              <span>Best: {@streaks.longest_streak}</span>
+            </div>
+          </div>
         </div>
         
     <!-- Delete button -->
         <button
           phx-click="delete_habit"
           phx-value-id={@habit.id}
-          data-confirm="Are you sure? This will delete all completion data."
-          class="text-red-500 hover:text-red-700 p-2"
+          data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
+          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all duration-200"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -241,31 +297,50 @@ defmodule StreaksWeb.HabitsLive.Habits do
         </button>
       </div>
       
-    <!-- Month labels -->
-      <div class="mb-2 text-xs text-gray-500 overflow-x-auto w-fit">
-        <div
-          class="grid grid-flow-col gap-1"
-          style="grid-template-columns: repeat(53, 12px);"
-        >
-          <%= for {month, column_index} <- @months do %>
-            <span style={"grid-column-start: #{column_index + 1};"}>
-              {String.split(month, " ") |> hd()}
-            </span>
+    <!-- Grid container -->
+      <div class="bg-gray-50 rounded-xl p-4">
+        <!-- Month labels -->
+        <div class="mb-3 text-xs font-medium text-gray-600 overflow-x-auto">
+          <div
+            class="grid grid-flow-col gap-1"
+            style="grid-template-columns: repeat(53, 14px);"
+          >
+            <%= for {month, column_index} <- @months do %>
+              <span style={"grid-column-start: #{column_index + 1};"} class="text-center">
+                {String.split(month, " ") |> hd()}
+              </span>
+            <% end %>
+          </div>
+        </div>
+        
+    <!-- Habit completion grid -->
+        <div class="grid grid-flow-col grid-rows-7 gap-1.5 overflow-x-auto pb-2">
+          <%= for {day, index} <- Enum.with_index(@habit_days) do %>
+            <.habit_cube
+              date={day}
+              completed={MapSet.member?(@completion_dates, day)}
+              habit_id={@habit.id}
+              is_today={day == @today}
+              is_future={Date.compare(day, @today) == :gt}
+            />
           <% end %>
         </div>
-      </div>
-      
-    <!-- Habit completion grid -->
-      <div class="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto w-fit">
-        <%= for {day, index} <- Enum.with_index(@habit_days) do %>
-          <.habit_cube
-            date={day}
-            completed={MapSet.member?(@completion_dates, day)}
-            habit_id={@habit.id}
-            is_today={day == @today}
-            is_future={Date.compare(day, @today) == :gt}
-          />
-        <% end %>
+        
+    <!-- Legend -->
+        <div class="mt-4 flex items-center gap-4 text-xs text-gray-600">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-gray-200 rounded-sm"></div>
+            <span>No data</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-green-500 rounded-sm"></div>
+            <span>Completed</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-gray-100 rounded-sm opacity-40"></div>
+            <span>Future</span>
+          </div>
+        </div>
       </div>
     </div>
     """
@@ -282,14 +357,21 @@ defmodule StreaksWeb.HabitsLive.Habits do
     ~H"""
     <div
       class={[
-        "w-3 h-3 rounded-sm border transition-colors",
+        "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200",
         if(@is_future,
-          do: "bg-gray-100 cursor-not-allowed opacity-40",
-          else: "cursor-pointer"
+          do: "bg-gray-100 cursor-not-allowed opacity-30 border-transparent",
+          else: "cursor-pointer transform hover:scale-125"
         ),
-        if(!@is_future && @completed, do: "bg-green-500 hover:bg-green-600", else: nil),
-        if(!@is_future && !@completed, do: "bg-gray-200 hover:bg-gray-300", else: nil),
-        if(@is_today, do: "border-gray-800", else: "border-transparent")
+        if(!@is_future && @completed,
+          do:
+            "bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 border-transparent shadow-sm",
+          else: nil
+        ),
+        if(!@is_future && !@completed,
+          do: "bg-gray-200 hover:bg-gray-300 border-transparent hover:border-gray-400",
+          else: nil
+        ),
+        if(@is_today, do: "ring-2 ring-blue-500 ring-offset-1", else: nil)
       ]}
       title={Date.to_iso8601(@date)}
       phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}

@@ -201,7 +201,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             value={@habit.name}
             phx-blur="rename_habit"
             phx-value-id={@habit.id}
-            class="text-xl font-bold bg-transparent border-none outline-none focus:bg-gray-50 focus:px-2 focus:py-1 rounded"
+            class="text-xl font-bold text-gray-900 bg-transparent border-none outline-none focus:bg-gray-50 focus:px-2 focus:py-1 rounded"
             style="width: auto; min-width: 100px;"
           />
           

@@ -178,16 +178,18 @@ defmodule StreaksWeb.HabitsLive.Habits do
 
   def habit_component(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
-    last_365_days = Habits.get_last_365_days()
-    months = Habits.group_days_by_month(last_365_days)
+    habit_days = Habits.get_habit_days(assigns.habit)
+    months = Habits.group_days_by_month(habit_days)
     streaks = Habits.calculate_streaks(assigns.habit)
+    today = Date.utc_today()
 
     assigns =
       assigns
       |> assign(:completion_dates, completion_dates)
-      |> assign(:last_365_days, last_365_days)
+      |> assign(:habit_days, habit_days)
       |> assign(:months, months)
       |> assign(:streaks, streaks)
+      |> assign(:today, today)
 
     ~H"""
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -241,7 +243,10 @@ defmodule StreaksWeb.HabitsLive.Habits do
       
     <!-- Month labels -->
       <div class="mb-2 text-xs text-gray-500 overflow-x-auto w-fit">
-        <div class="grid grid-flow-col gap-1" style="grid-template-columns: repeat(53, 12px);">
+        <div
+          class="grid grid-flow-col gap-1"
+          style="grid-template-columns: repeat(53, 12px);"
+        >
           <%= for {month, column_index} <- @months do %>
             <span style={"grid-column-start: #{column_index + 1};"}>
               {String.split(month, " ") |> hd()}
@@ -252,12 +257,13 @@ defmodule StreaksWeb.HabitsLive.Habits do
       
     <!-- Habit completion grid -->
       <div class="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto w-fit">
-        <%= for {day, index} <- Enum.with_index(@last_365_days) do %>
+        <%= for {day, index} <- Enum.with_index(@habit_days) do %>
           <.habit_cube
             date={day}
             completed={MapSet.member?(@completion_dates, day)}
             habit_id={@habit.id}
-            is_today={day == Date.utc_today()}
+            is_today={day == @today}
+            is_future={Date.compare(day, @today) == :gt}
           />
         <% end %>
       </div>
@@ -270,17 +276,23 @@ defmodule StreaksWeb.HabitsLive.Habits do
   attr :completed, :boolean, required: true
   attr :habit_id, :integer, required: true
   attr :is_today, :boolean, default: false
+  attr :is_future, :boolean, default: false
 
   def habit_cube(assigns) do
     ~H"""
     <div
       class={[
-        "w-3 h-3 rounded-sm cursor-pointer border transition-colors",
-        if(@completed, do: "bg-green-500 hover:bg-green-600", else: "bg-gray-200 hover:bg-gray-300"),
+        "w-3 h-3 rounded-sm border transition-colors",
+        if(@is_future,
+          do: "bg-gray-100 cursor-not-allowed opacity-40",
+          else: "cursor-pointer"
+        ),
+        if(!@is_future && @completed, do: "bg-green-500 hover:bg-green-600", else: nil),
+        if(!@is_future && !@completed, do: "bg-gray-200 hover:bg-gray-300", else: nil),
         if(@is_today, do: "border-gray-800", else: "border-transparent")
       ]}
       title={Date.to_iso8601(@date)}
-      phx-click={if(@completed, do: "unlog_day", else: "log_day")}
+      phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
     >

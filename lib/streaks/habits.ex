@@ -206,6 +206,30 @@ defmodule Streaks.Habits do
   end
 
   @doc """
+  Gets 365 days starting from when the habit was created.
+  If the habit is older than 365 days, show the last 365 days.
+  If the habit is newer, show from creation date + future placeholders.
+  """
+  def get_habit_days(%Habit{inserted_at: inserted_at}) do
+    today = Date.utc_today()
+    start_date = DateTime.to_date(inserted_at)
+
+    days_since_creation = Date.diff(today, start_date)
+
+    # Always show 365 days
+    if days_since_creation >= 364 do
+      # Habit is old enough, show last 365 days
+      0..364
+      |> Enum.map(&Date.add(today, -&1))
+      |> Enum.reverse()
+    else
+      # Habit is newer, show from creation date to 365 days out
+      0..364
+      |> Enum.map(&Date.add(start_date, &1))
+    end
+  end
+
+  @doc """
   Groups days by month for display purposes.
   Returns a list of tuples with {month_name, column_index} where column_index
   represents which column the month starts in (since grid flows in columns of 7 rows).

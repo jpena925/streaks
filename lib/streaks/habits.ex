@@ -207,16 +207,21 @@ defmodule Streaks.Habits do
 
   @doc """
   Groups days by month for display purposes.
+  Returns a list of tuples with {month_name, column_index} where column_index
+  represents which column the month starts in (since grid flows in columns of 7 rows).
   """
   def group_days_by_month(days) do
     days
     |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {date, index}, acc ->
+    |> Enum.reduce([], fn {date, index}, acc ->
       month_key = "#{month_name(date.month)} #{date.year}"
+      column_index = div(index, 7)
 
-      case Map.get(acc, month_key) do
-        nil -> Map.put(acc, month_key, index)
-        _ -> acc
+      # Only add if this is the first occurrence of this month
+      if Enum.any?(acc, fn {key, _} -> key == month_key end) do
+        acc
+      else
+        acc ++ [{month_key, column_index}]
       end
     end)
   end

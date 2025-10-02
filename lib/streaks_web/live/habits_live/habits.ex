@@ -240,12 +240,14 @@ defmodule StreaksWeb.HabitsLive.Habits do
       </div>
       
     <!-- Month labels -->
-      <div class="mb-2 text-xs text-gray-500 flex">
-        <%= for {month, start_index} <- @months do %>
-          <span style={"margin-left: #{start_index * 14 / 7}px;"}>
-            {String.split(month, " ") |> hd}
-          </span>
-        <% end %>
+      <div class="mb-2 text-xs text-gray-500 overflow-x-auto w-fit">
+        <div class="grid grid-flow-col gap-1" style="grid-template-columns: repeat(53, 12px);">
+          <%= for {month, column_index} <- @months do %>
+            <span style={"grid-column-start: #{column_index + 1};"}>
+              {String.split(month, " ") |> hd()}
+            </span>
+          <% end %>
+        </div>
       </div>
       
     <!-- Habit completion grid -->

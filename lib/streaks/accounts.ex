@@ -77,6 +77,7 @@ defmodule Streaks.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.email_changeset(attrs)
+    |> Ecto.Changeset.change(%{confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)})
     |> Repo.insert()
   end
 

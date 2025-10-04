@@ -38,9 +38,13 @@
           <div class="flex items-center">
             <.link
               href={~p"/streaks"}
-              class="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-purple-700 transition-all"
+              class="flex items-center gap-1.5 sm:gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-purple-700 transition-all"
             >
-              <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z">
                 </path>
               </svg>
@@ -49,10 +53,10 @@
           </div>
           
 <!-- Navigation Links -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 sm:gap-2">
             <%= if @current_scope do %>
               <!-- User email badge -->
-              <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-700">
+              <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-700">
                 <svg
                   class="w-4 h-4 text-gray-500"
                   fill="none"
@@ -73,7 +77,8 @@
 <!-- Settings link -->
               <.link
                 href={~p"/users/settings"}
-                class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all font-medium"
+                class="flex items-center gap-1.5 px-2 sm:px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all font-medium"
+                title="Settings"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -98,7 +103,8 @@
               <.link
                 href={~p"/users/log-out"}
                 method="delete"
-                class="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all font-medium"
+                class="flex items-center gap-1.5 px-2 sm:px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all font-medium"
+                title="Log out"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -115,7 +121,7 @@
               <!-- Register link -->
               <.link
                 href={~p"/users/register"}
-                class="px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all font-medium"
+                class="px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all font-medium"
               >
                 Register
               </.link>
@@ -123,7 +129,7 @@
 <!-- Log in link -->
               <.link
                 href={~p"/users/log-in"}
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-semibold shadow-sm hover:shadow-md"
+                class="px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-semibold shadow-sm hover:shadow-md"
               >
                 Log in
               </.link>

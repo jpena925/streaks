@@ -103,6 +103,6 @@ if config_env() == :prod do
   #
   # Using Resend for transactional emails
   config :streaks, Streaks.Mailer,
-    adapter: Swoosh.Adapters.Resend,
+    adapter: Resend.Swoosh.Adapter,
     api_key: System.get_env("RESEND_API_KEY")
 end

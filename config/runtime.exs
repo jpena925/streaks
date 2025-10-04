@@ -101,6 +101,8 @@ if config_env() == :prod do
 
   # ## Configuring the mailer
   #
-  # Since we're auto-confirming users, use Test adapter (doesn't actually send emails)
-  config :streaks, Streaks.Mailer, adapter: Swoosh.Adapters.Test
+  # Using Resend for transactional emails
+  config :streaks, Streaks.Mailer,
+    adapter: Swoosh.Adapters.Resend,
+    api_key: System.get_env("RESEND_API_KEY")
 end

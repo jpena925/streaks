@@ -9,7 +9,7 @@ defmodule Streaks.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Streaks", "contact@example.com"})
+      |> from({"Streaks", "onboarding@resend.dev"})
       |> subject(subject)
       |> text_body(body)
 

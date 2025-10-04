@@ -35,3 +35,24 @@ streaks-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Database files (if using SQLite locally)
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Fly.io local state
+.fly/

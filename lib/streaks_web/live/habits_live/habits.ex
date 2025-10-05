@@ -107,19 +107,23 @@ defmodule StreaksWeb.HabitsLive.Habits do
 
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-12">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-6 sm:py-12">
       <div class="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
         <!-- Header -->
         <div class="mb-6 sm:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">Your Streaks</h1>
-            <p class="mt-1 sm:mt-2 text-sm text-gray-600">Build consistency, one day at a time</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Your Streaks
+            </h1>
+            <p class="mt-1 sm:mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Build consistency, one day at a time
+            </p>
           </div>
 
           <button
             :if={!@show_new_habit_form}
             phx-click="show_new_habit_form"
-            class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
@@ -132,30 +136,32 @@ defmodule StreaksWeb.HabitsLive.Habits do
     <!-- New Habit Form -->
         <div
           :if={@show_new_habit_form}
-          class="mb-6 sm:mb-8 p-4 sm:p-6 bg-white rounded-2xl shadow-xl border border-gray-100"
+          class="mb-6 sm:mb-8 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700"
         >
-          <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Create New Habit</h3>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Create New Habit
+          </h3>
           <form phx-submit="create_habit" class="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               name="habit[name]"
               value={@new_habit_name}
               placeholder="e.g., Morning workout, Read for 30 minutes..."
-              class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+              class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all text-base"
               required
               autofocus
             />
             <div class="flex gap-3">
               <button
                 type="submit"
-                class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg"
+                class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg"
               >
                 Create
               </button>
               <button
                 type="button"
                 phx-click="hide_new_habit_form"
-                class="flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-3 rounded-xl transition-all duration-200"
+                class="flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded-xl transition-all duration-200"
               >
                 Cancel
               </button>
@@ -166,7 +172,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
     <!-- Empty State -->
         <div :if={@habits == []} class="text-center py-20">
           <svg
-            class="mx-auto h-16 w-16 text-gray-400 mb-4"
+            class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -179,11 +185,13 @@ defmodule StreaksWeb.HabitsLive.Habits do
             >
             </path>
           </svg>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">No habits yet</h3>
-          <p class="text-gray-600 mb-6">Create your first habit to start building your streaks!</p>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No habits yet</h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Create your first habit to start building your streaks!
+          </p>
           <button
             phx-click="show_new_habit_form"
-            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-200"
+            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-200"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
@@ -231,7 +239,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
       |> assign(:today, today)
 
     ~H"""
-    <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100">
+    <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100 dark:border-gray-700">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -241,7 +249,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             value={@habit.name}
             phx-blur="rename_habit"
             phx-value-id={@habit.id}
-            class="text-xl sm:text-2xl font-bold text-gray-900 bg-transparent border-none outline-none focus:bg-gray-50 focus:px-3 focus:py-2 rounded-lg transition-all min-w-0"
+            class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all min-w-0"
             style="width: 100%;"
           />
           
@@ -252,7 +260,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
               "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap",
               if(@streaks.current_streak > 0,
                 do: "bg-gradient-to-r from-green-400 to-emerald-500 text-white",
-                else: "bg-gray-100 text-gray-600"
+                else: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
               )
             ]}>
               <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -265,7 +273,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             </div>
             
     <!-- Longest streak -->
-            <div class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-700 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
+            <div class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
               <svg
                 class="w-3.5 h-3.5 sm:w-4 sm:h-4"
                 fill="none"
@@ -290,7 +298,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
           phx-click="delete_habit"
           phx-value-id={@habit.id}
           data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
-          class="sm:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all duration-200 self-end sm:self-center"
+          class="sm:opacity-0 group-hover:opacity-100 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all duration-200 self-end sm:self-center"
           title="Delete habit"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,12 +314,12 @@ defmodule StreaksWeb.HabitsLive.Habits do
       </div>
       
     <!-- Grid container -->
-      <div class="bg-gray-50 rounded-xl p-3 sm:p-4">
+      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
             <!-- Month labels -->
-            <div class="mb-2 sm:mb-3 text-xs font-medium text-gray-600">
+            <div class="mb-2 sm:mb-3 text-xs font-medium text-gray-600 dark:text-gray-400">
               <div
                 class="grid grid-flow-col gap-1"
                 style="grid-template-columns: repeat(53, 14px);"
@@ -340,9 +348,9 @@ defmodule StreaksWeb.HabitsLive.Habits do
         </div>
         
     <!-- Legend -->
-        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600">
+        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-200 rounded-sm"></div>
+            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-sm"></div>
             <span>No data</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -350,7 +358,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             <span>Completed</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-100 rounded-sm opacity-40"></div>
+            <div class="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded-sm opacity-40"></div>
             <span>Future</span>
           </div>
         </div>
@@ -372,7 +380,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
       class={[
         "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200",
         if(@is_future,
-          do: "bg-gray-100 cursor-not-allowed opacity-30 border-transparent",
+          do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
           else: "cursor-pointer transform hover:scale-125"
         ),
         if(!@is_future && @completed,
@@ -381,10 +389,14 @@ defmodule StreaksWeb.HabitsLive.Habits do
           else: nil
         ),
         if(!@is_future && !@completed,
-          do: "bg-gray-200 hover:bg-gray-300 border-transparent hover:border-gray-400",
+          do:
+            "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border-transparent hover:border-gray-400 dark:hover:border-gray-500",
           else: nil
         ),
-        if(@is_today, do: "ring-2 ring-blue-500 ring-offset-1", else: nil)
+        if(@is_today,
+          do: "ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-1 dark:ring-offset-gray-900",
+          else: nil
+        )
       ]}
       title={Date.to_iso8601(@date)}
       phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}

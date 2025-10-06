@@ -206,27 +206,43 @@ defmodule Streaks.Habits do
   end
 
   @doc """
-  Gets 365 days starting from when the habit was created.
-  If the habit is older than 365 days, show the last 365 days.
-  If the habit is newer, show from creation date + future placeholders.
+  Gets days aligned to Sunday-Saturday weeks.
+  Always starts on a Sunday and shows complete weeks.
+  For habits older than 52 weeks, shows the last 52 weeks.
+  For newer habits, shows from the Sunday of the creation week forward.
   """
   def get_habit_days(%Habit{inserted_at: inserted_at}) do
     today = Date.utc_today()
-    start_date = DateTime.to_date(inserted_at)
+    habit_start_date = DateTime.to_date(inserted_at)
 
-    days_since_creation = Date.diff(today, start_date)
+    # Find the Sunday of the week containing the habit start date
+    # Date.day_of_week returns 1-7 where 1=Monday, 7=Sunday
+    habit_day_of_week = Date.day_of_week(habit_start_date)
+    days_since_sunday = if habit_day_of_week == 7, do: 0, else: habit_day_of_week
+    habit_week_sunday = Date.add(habit_start_date, -days_since_sunday)
 
-    # Always show 365 days
-    if days_since_creation >= 364 do
-      # Habit is old enough, show last 365 days
-      0..364
-      |> Enum.map(&Date.add(today, -&1))
-      |> Enum.reverse()
-    else
-      # Habit is newer, show from creation date to 365 days out
-      0..364
-      |> Enum.map(&Date.add(start_date, &1))
-    end
+    # Find the Sunday of the current week
+    today_day_of_week = Date.day_of_week(today)
+    days_since_today_sunday = if today_day_of_week == 7, do: 0, else: today_day_of_week
+    current_week_sunday = Date.add(today, -days_since_today_sunday)
+
+    # Calculate weeks between habit start and now
+    days_since_habit_start = Date.diff(current_week_sunday, habit_week_sunday)
+    weeks_since_habit_start = div(days_since_habit_start, 7)
+
+    # Show 52 complete weeks (364 days = 52 weeks * 7 days)
+    start_sunday =
+      if weeks_since_habit_start >= 52 do
+        # Habit is old enough, show last 52 weeks starting from 52 weeks ago
+        Date.add(current_week_sunday, -51 * 7)
+      else
+        # Habit is newer, show from the Sunday of habit creation week
+        habit_week_sunday
+      end
+
+    # Generate 52 weeks (364 days) starting from start_sunday
+    0..363
+    |> Enum.map(&Date.add(start_sunday, &1))
   end
 
   @doc """

@@ -141,7 +141,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             Add Habit
           </button>
         </div>
-
+        
     <!-- New Habit Form -->
         <div
           :if={@show_new_habit_form}
@@ -177,7 +177,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             </div>
           </form>
         </div>
-
+        
     <!-- Empty State -->
         <div :if={@habits == []} class="text-center py-20">
           <svg
@@ -209,7 +209,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             Create Your First Habit
           </button>
         </div>
-
+        
     <!-- Habits List -->
         <div class="space-y-6">
           <.habit_component
@@ -261,7 +261,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
           phx-value-id={@habit.id}
           class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all w-full mb-3"
         />
-
+        
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -281,7 +281,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
                 {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
               </span>
             </div>
-
+            
     <!-- Longest streak -->
             <div class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
               <svg
@@ -301,7 +301,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
               <span>Best: {@streaks.longest_streak}</span>
             </div>
           </div>
-
+          
     <!-- Delete button -->
           <button
             phx-click="delete_habit"
@@ -322,7 +322,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
           </button>
         </div>
       </div>
-
+      
     <!-- Grid container -->
       <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
         <!-- Scrollable container for both labels and grid -->
@@ -341,7 +341,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
                 <% end %>
               </div>
             </div>
-
+            
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <%= for {day, index} <- Enum.with_index(@habit_days) do %>
@@ -356,7 +356,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             </div>
           </div>
         </div>
-
+        
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">

@@ -125,7 +125,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
               Your Streaks
             </h1>
             <p class="mt-1 sm:mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Build consistency, one day at a time
+              Keep track of when you do things.
             </p>
           </div>
 
@@ -141,7 +141,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             Add Habit
           </button>
         </div>
-        
+
     <!-- New Habit Form -->
         <div
           :if={@show_new_habit_form}
@@ -177,7 +177,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             </div>
           </form>
         </div>
-        
+
     <!-- Empty State -->
         <div :if={@habits == []} class="text-center py-20">
           <svg
@@ -209,7 +209,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             Create Your First Habit
           </button>
         </div>
-        
+
     <!-- Habits List -->
         <div class="space-y-6">
           <.habit_component
@@ -252,19 +252,18 @@ defmodule StreaksWeb.HabitsLive.Habits do
     ~H"""
     <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100 dark:border-gray-700">
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-          <!-- Editable habit name -->
-          <input
-            type="text"
-            value={@habit.name}
-            phx-blur="rename_habit"
-            phx-value-id={@habit.id}
-            class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all min-w-0"
-            style="width: 100%;"
-          />
-          
-    <!-- Stats -->
+      <div class="mb-4 sm:mb-6">
+        <!-- Editable habit name -->
+        <input
+          type="text"
+          value={@habit.name}
+          phx-blur="rename_habit"
+          phx-value-id={@habit.id}
+          class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all w-full mb-3"
+        />
+
+    <!-- Stats and Delete Button Row -->
+        <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
             <!-- Current streak badge -->
             <div class={[
@@ -282,7 +281,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
                 {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
               </span>
             </div>
-            
+
     <!-- Longest streak -->
             <div class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
               <svg
@@ -302,28 +301,28 @@ defmodule StreaksWeb.HabitsLive.Habits do
               <span>Best: {@streaks.longest_streak}</span>
             </div>
           </div>
-        </div>
-        
+
     <!-- Delete button -->
-        <button
-          phx-click="delete_habit"
-          phx-value-id={@habit.id}
-          data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
-          class="sm:opacity-0 group-hover:opacity-100 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all duration-200 self-end sm:self-center"
-          title="Delete habit"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            >
-            </path>
-          </svg>
-        </button>
+          <button
+            phx-click="delete_habit"
+            phx-value-id={@habit.id}
+            data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
+            class="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all duration-200 flex-shrink-0"
+            title="Delete habit"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              >
+              </path>
+            </svg>
+          </button>
+        </div>
       </div>
-      
+
     <!-- Grid container -->
       <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
         <!-- Scrollable container for both labels and grid -->
@@ -342,7 +341,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
                 <% end %>
               </div>
             </div>
-            
+
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <%= for {day, index} <- Enum.with_index(@habit_days) do %>
@@ -357,7 +356,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">

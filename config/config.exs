@@ -7,6 +7,9 @@
 # General application configuration
 import Config
 
+# Configure Elixir to use the tz time zone database
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
 config :streaks, :scopes,
   user: [
     default: true,

@@ -9,12 +9,21 @@ defmodule StreaksWeb.HabitsLive.Habits do
       |> assign(:new_habit_name, "")
       |> assign(:show_new_habit_form, false)
 
-    if connected?(socket) do
-      habits = Habits.list_habits(socket.assigns.current_scope.user)
-      {:ok, assign(socket, :habits, habits)}
-    else
-      {:ok, assign(socket, :habits, [])}
-    end
+    socket =
+      if connected?(socket) do
+        time_zone = get_connect_params(socket)["timeZone"] || "UTC"
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+
+        socket
+        |> assign(:timezone, time_zone)
+        |> assign(:habits, habits)
+      else
+        socket
+        |> assign(:timezone, "UTC")
+        |> assign(:habits, [])
+      end
+
+    {:ok, socket}
   end
 
   def handle_params(_params, _url, socket) do
@@ -207,6 +216,7 @@ defmodule StreaksWeb.HabitsLive.Habits do
             :for={habit <- @habits}
             habit={habit}
             current_user={@current_scope.user}
+            timezone={@timezone}
           />
         </div>
       </div>
@@ -222,13 +232,14 @@ defmodule StreaksWeb.HabitsLive.Habits do
 
   attr :habit, :map, required: true
   attr :current_user, :map, required: true
+  attr :timezone, :string, required: true
 
   def habit_component(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
-    habit_days = Habits.get_habit_days(assigns.habit)
+    habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
-    streaks = Habits.calculate_streaks(assigns.habit)
-    today = Date.utc_today()
+    streaks = Habits.calculate_streaks(assigns.habit, assigns.timezone)
+    today = Habits.today(assigns.timezone)
 
     assigns =
       assigns

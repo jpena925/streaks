@@ -10,6 +10,17 @@ defmodule Streaks.Habits do
   alias Streaks.Accounts.User
 
   @doc """
+  Gets today's date in the specified timezone.
+  Defaults to UTC if timezone is invalid.
+  """
+  def today(timezone \\ "UTC") do
+    case DateTime.now(timezone) do
+      {:ok, datetime} -> DateTime.to_date(datetime)
+      {:error, _} -> Date.utc_today()
+    end
+  end
+
+  @doc """
   Returns the list of habits for a user.
   """
   def list_habits(%User{id: user_id}) do
@@ -114,8 +125,8 @@ defmodule Streaks.Habits do
   @doc """
   Gets habit completions for the last N days.
   """
-  def get_habit_completions(%Habit{id: habit_id}, days \\ 365) do
-    start_date = Date.add(Date.utc_today(), -days)
+  def get_habit_completions(%Habit{id: habit_id}, days \\ 365, timezone \\ "UTC") do
+    start_date = Date.add(today(timezone), -days)
 
     HabitCompletion
     |> where([hc], hc.habit_id == ^habit_id and hc.completed_on >= ^start_date)
@@ -127,18 +138,19 @@ defmodule Streaks.Habits do
   @doc """
   Calculates current and longest streaks for a habit.
   """
-  def calculate_streaks(%Habit{} = habit) do
-    completions = get_habit_completions(habit)
-    calculate_streaks_from_dates(completions)
+  def calculate_streaks(%Habit{} = habit, timezone \\ "UTC") do
+    completions = get_habit_completions(habit, 365, timezone)
+    calculate_streaks_from_dates(completions, timezone)
   end
 
-  def calculate_streaks_from_dates(completion_dates) when is_list(completion_dates) do
-    today = Date.utc_today()
+  def calculate_streaks_from_dates(completion_dates, timezone \\ "UTC")
+      when is_list(completion_dates) do
+    todays_date = today(timezone)
 
     # Sort dates in descending order (most recent first)
     sorted_dates = Enum.sort(completion_dates, Date)
 
-    current_streak = calculate_current_streak(sorted_dates, today)
+    current_streak = calculate_current_streak(sorted_dates, todays_date)
     longest_streak = calculate_longest_streak(sorted_dates)
 
     %{current_streak: current_streak, longest_streak: longest_streak}
@@ -197,11 +209,11 @@ defmodule Streaks.Habits do
   @doc """
   Gets the last 365 days as a list of dates.
   """
-  def get_last_365_days do
-    today = Date.utc_today()
+  def get_last_365_days(timezone \\ "UTC") do
+    todays_date = today(timezone)
 
     0..364
-    |> Enum.map(&Date.add(today, -&1))
+    |> Enum.map(&Date.add(todays_date, -&1))
     |> Enum.reverse()
   end
 
@@ -211,8 +223,8 @@ defmodule Streaks.Habits do
   For habits older than 52 weeks, shows the last 52 weeks.
   For newer habits, shows from the Sunday of the creation week forward.
   """
-  def get_habit_days(%Habit{inserted_at: inserted_at}) do
-    today = Date.utc_today()
+  def get_habit_days(%Habit{inserted_at: inserted_at}, timezone \\ "UTC") do
+    todays_date = today(timezone)
     habit_start_date = DateTime.to_date(inserted_at)
 
     # Find the Sunday of the week containing the habit start date
@@ -222,9 +234,9 @@ defmodule Streaks.Habits do
     habit_week_sunday = Date.add(habit_start_date, -days_since_sunday)
 
     # Find the Sunday of the current week
-    today_day_of_week = Date.day_of_week(today)
+    today_day_of_week = Date.day_of_week(todays_date)
     days_since_today_sunday = if today_day_of_week == 7, do: 0, else: today_day_of_week
-    current_week_sunday = Date.add(today, -days_since_today_sunday)
+    current_week_sunday = Date.add(todays_date, -days_since_today_sunday)
 
     # Calculate weeks between habit start and now
     days_since_habit_start = Date.diff(current_week_sunday, habit_week_sunday)

@@ -36,7 +36,7 @@ defmodule StreaksWeb.HomeLive do
           <!-- Non-authenticated user content -->
           <div class="space-y-4">
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">
-              Build consistent habits and track your progress
+              Track your habits and see what you've done
             </p>
             <.link
               href={~p"/users/register"}

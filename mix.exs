@@ -11,7 +11,11 @@ defmodule Streaks.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      dialyzer: [
+        plt_add_apps: [:ex_unit, :mix],
+        check_plt: true
+      ]
     ]
   end
 
@@ -68,7 +72,8 @@ defmodule Streaks.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
-      {:tz, "~> 0.28"}
+      {:tz, "~> 0.28"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -91,7 +96,13 @@ defmodule Streaks.MixProject do
         "esbuild streaks --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warning-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "dialyzer",
+        "test"
+      ]
     ]
   end
 end

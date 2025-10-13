@@ -80,6 +80,117 @@ defmodule StreaksWeb.CoreComponents do
   end
 
   @doc """
+  Renders a badge with optional icon.
+
+  ## Examples
+
+      <.badge>5 days</.badge>
+      <.badge variant="success" icon="hero-fire">Current: 5</.badge>
+      <.badge variant="info">Best: 10</.badge>
+  """
+  attr :variant, :string, default: "neutral", values: ~w(success info neutral)
+  attr :icon, :string, default: nil
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def badge(assigns) do
+    ~H"""
+    <div class={[
+      "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap",
+      @variant == "success" && "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-sm",
+      @variant == "info" && "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+      @variant == "neutral" && "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
+      @class
+    ]}>
+      <.icon :if={@icon} name={@icon} class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a primary action button with optional icon.
+
+  ## Examples
+
+      <.primary_button phx-click="add">Add Item</.primary_button>
+      <.primary_button icon="hero-plus">Add Habit</.primary_button>
+  """
+  attr :icon, :string, default: nil
+  attr :class, :string, default: nil
+  attr :rest, :global, include: ~w(phx-click phx-value-id disabled type)
+
+  slot :inner_block, required: true
+
+  def primary_button(assigns) do
+    ~H"""
+    <button
+      class={[
+        "group relative inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105",
+        @class
+      ]}
+      {@rest}
+    >
+      <.icon :if={@icon} name={@icon} class="w-5 h-5" />
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Renders an icon button for actions like delete.
+
+  ## Examples
+
+      <.icon_button phx-click="delete" icon="hero-trash" title="Delete" />
+      <.icon_button phx-click="edit" icon="hero-pencil" variant="neutral" />
+  """
+  attr :icon, :string, required: true
+  attr :variant, :string, default: "danger", values: ~w(danger neutral)
+  attr :title, :string, default: nil
+  attr :rest, :global, include: ~w(phx-click phx-value-id data-confirm disabled)
+
+  def icon_button(assigns) do
+    ~H"""
+    <button
+      class={[
+        "p-2 rounded-lg transition-all duration-200 flex-shrink-0",
+        @variant == "danger" &&
+          "text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20",
+        @variant == "neutral" &&
+          "text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+      ]}
+      title={@title}
+      {@rest}
+    >
+      <.icon name={@icon} class="w-5 h-5" />
+    </button>
+    """
+  end
+
+  @doc """
+  Renders a card container.
+
+  ## Examples
+
+      <.card>Content</.card>
+      <.card class="p-4">Custom padding</.card>
+  """
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def card(assigns) do
+    ~H"""
+    <div class={[
+      "bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100 dark:border-gray-700",
+      @class
+    ]}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
   Renders a button with navigation support.
 
   ## Examples

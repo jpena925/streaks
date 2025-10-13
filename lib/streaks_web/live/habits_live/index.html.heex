@@ -11,24 +11,18 @@
         </p>
       </div>
 
-      <button
+      <.primary_button
         :if={!@show_new_habit_form}
         phx-click="show_new_habit_form"
-        class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+        icon="hero-plus"
+        class="w-full sm:w-auto"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-          </path>
-        </svg>
         Add Habit
-      </button>
+      </.primary_button>
     </div>
     
 <!-- New Habit Form -->
-    <div
-      :if={@show_new_habit_form}
-      class="mb-6 sm:mb-8 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700"
-    >
+    <.card :if={@show_new_habit_form} class="mb-6 sm:mb-8 p-4 sm:p-6">
       <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Create New Habit
       </h3>
@@ -43,12 +37,9 @@
           autofocus
         />
         <div class="flex gap-3">
-          <button
-            type="submit"
-            class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg"
-          >
+          <.primary_button type="submit" class="flex-1 sm:flex-none">
             Create
-          </button>
+          </.primary_button>
           <button
             type="button"
             phx-click="hide_new_habit_form"
@@ -58,7 +49,7 @@
           </button>
         </div>
       </form>
-    </div>
+    </.card>
     
 <!-- Empty State -->
     <div :if={@habits == []} class="text-center py-20">
@@ -80,16 +71,9 @@
       <p class="text-gray-600 dark:text-gray-400 mb-6">
         Create your first habit to start building your streaks!
       </p>
-      <button
-        phx-click="show_new_habit_form"
-        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-200"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-          </path>
-        </svg>
+      <.primary_button phx-click="show_new_habit_form" icon="hero-plus">
         Create Your First Habit
-      </button>
+      </.primary_button>
     </div>
     
 <!-- Habits List -->

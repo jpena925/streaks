@@ -140,7 +140,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:today, today)
 
     ~H"""
-    <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100 dark:border-gray-700">
+    <.card>
       <!-- Header -->
       <div class="mb-4 sm:mb-6">
         <!-- Editable habit name -->
@@ -156,60 +156,28 @@ defmodule StreaksWeb.HabitsLive.Index do
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
             <!-- Current streak badge -->
-            <div class={[
-              "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap",
-              if(@streaks.current_streak > 0,
-                do: "bg-gradient-to-r from-green-400 to-emerald-500 text-white",
-                else: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-              )
-            ]}>
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z">
-                </path>
-              </svg>
-              <span>
-                {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
-              </span>
-            </div>
+            <.badge
+              variant={if(@streaks.current_streak > 0, do: "success", else: "neutral")}
+              icon="hero-fire"
+              class="font-bold"
+            >
+              {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
+            </.badge>
             
     <!-- Longest streak -->
-            <div class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
-              <svg
-                class="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                >
-                </path>
-              </svg>
-              <span>Best: {@streaks.longest_streak}</span>
-            </div>
+            <.badge variant="info" icon="hero-sparkles">
+              Best: {@streaks.longest_streak}
+            </.badge>
           </div>
           
     <!-- Delete button -->
-          <button
+          <.icon_button
             phx-click="delete_habit"
             phx-value-id={@habit.id}
             data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
-            class="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all duration-200 flex-shrink-0"
+            icon="hero-trash"
             title="Delete habit"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              >
-              </path>
-            </svg>
-          </button>
+          />
         </div>
       </div>
       
@@ -264,7 +232,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           </div>
         </div>
       </div>
-    </div>
+    </.card>
     """
   end
 

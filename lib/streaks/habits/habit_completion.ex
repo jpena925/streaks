@@ -6,6 +6,7 @@ defmodule Streaks.Habits.HabitCompletion do
 
   schema "habit_completions" do
     field :completed_on, :date
+    field :quantity, :integer
 
     belongs_to :habit, Habit
 
@@ -15,7 +16,7 @@ defmodule Streaks.Habits.HabitCompletion do
   @doc false
   def changeset(habit_completion, attrs) do
     habit_completion
-    |> cast(attrs, [:completed_on])
+    |> cast(attrs, [:completed_on, :quantity])
     |> validate_required([:completed_on])
     |> unique_constraint([:habit_id, :completed_on],
       message: "Habit already completed on this date"

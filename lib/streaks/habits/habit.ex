@@ -7,6 +7,7 @@ defmodule Streaks.Habits.Habit do
 
   schema "habits" do
     field :name, :string
+    field :has_quantity, :boolean, default: false
     field :archived_at, :utc_datetime
 
     belongs_to :user, User
@@ -18,7 +19,7 @@ defmodule Streaks.Habits.Habit do
   @doc false
   def changeset(habit, attrs) do
     habit
-    |> cast(attrs, [:name, :archived_at])
+    |> cast(attrs, [:name, :has_quantity, :archived_at])
     |> validate_required([:name])
     |> validate_length(:name, min: 1, max: 100)
     |> trim_name()

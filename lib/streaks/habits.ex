@@ -294,7 +294,6 @@ defmodule Streaks.Habits do
     end)
   end
 
-  # Helper function to convert month number to name
   defp month_name(1), do: "Jan"
   defp month_name(2), do: "Feb"
   defp month_name(3), do: "Mar"

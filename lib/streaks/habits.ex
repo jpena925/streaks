@@ -83,20 +83,25 @@ defmodule Streaks.Habits do
   @doc """
   Logs a habit completion for a specific date.
   """
-  def log_habit_completion(%Habit{id: habit_id}, date) when is_binary(date) do
+  def log_habit_completion(habit_or_id, date, quantity \\ nil)
+
+  def log_habit_completion(%Habit{id: habit_id}, date, quantity) when is_binary(date) do
     case Date.from_iso8601(date) do
-      {:ok, parsed_date} -> log_habit_completion(habit_id, parsed_date)
+      {:ok, parsed_date} -> log_habit_completion(habit_id, parsed_date, quantity)
       {:error, _} -> {:error, :invalid_date}
     end
   end
 
-  def log_habit_completion(%Habit{id: habit_id}, %Date{} = date) do
-    log_habit_completion(habit_id, date)
+  def log_habit_completion(%Habit{id: habit_id}, %Date{} = date, quantity) do
+    log_habit_completion(habit_id, date, quantity)
   end
 
-  def log_habit_completion(habit_id, %Date{} = date) when is_integer(habit_id) do
+  def log_habit_completion(habit_id, %Date{} = date, quantity) when is_integer(habit_id) do
+    attrs = %{completed_on: date}
+    attrs = if quantity, do: Map.put(attrs, :quantity, quantity), else: attrs
+
     %HabitCompletion{habit_id: habit_id}
-    |> HabitCompletion.changeset(%{completed_on: date})
+    |> HabitCompletion.changeset(attrs)
     |> Repo.insert()
   end
 

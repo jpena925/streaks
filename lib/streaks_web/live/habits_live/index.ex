@@ -8,6 +8,10 @@ defmodule StreaksWeb.HabitsLive.Index do
       socket
       |> assign(:new_habit_name, "")
       |> assign(:show_new_habit_form, false)
+      |> assign(:show_quantity_modal, false)
+      |> assign(:quantity_habit_id, nil)
+      |> assign(:quantity_date, nil)
+      |> assign(:quantity_value, "")
 
     socket =
       if connected?(socket) do
@@ -41,8 +45,12 @@ defmodule StreaksWeb.HabitsLive.Index do
      |> assign(:new_habit_name, "")}
   end
 
-  def handle_event("create_habit", %{"habit" => %{"name" => name}}, socket) do
-    case Habits.create_habit(socket.assigns.current_scope.user, %{name: name}) do
+  def handle_event("create_habit", %{"habit" => habit_params}, socket) do
+    # Convert checkbox value to boolean
+    has_quantity = Map.get(habit_params, "has_quantity") == "true"
+    attrs = %{name: habit_params["name"], has_quantity: has_quantity}
+
+    case Habits.create_habit(socket.assigns.current_scope.user, attrs) do
       {:ok, _habit} ->
         habits = Habits.list_habits(socket.assigns.current_scope.user)
 
@@ -95,13 +103,24 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("log_day", %{"habit_id" => habit_id, "date" => date}, socket) do
     habit = Habits.get_habit!(String.to_integer(habit_id), socket.assigns.current_scope.user)
 
-    case Habits.log_habit_completion(habit, date) do
-      {:ok, _completion} ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
-        {:noreply, assign(socket, :habits, habits)}
+    if habit.has_quantity do
+      # Show modal to get quantity
+      {:noreply,
+       socket
+       |> assign(:show_quantity_modal, true)
+       |> assign(:quantity_habit_id, habit_id)
+       |> assign(:quantity_date, date)
+       |> assign(:quantity_value, "")}
+    else
+      # Log without quantity
+      case Habits.log_habit_completion(habit, date) do
+        {:ok, _completion} ->
+          habits = Habits.list_habits(socket.assigns.current_scope.user)
+          {:noreply, assign(socket, :habits, habits)}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Error logging completion")}
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Error logging completion")}
+      end
     end
   end
 
@@ -114,10 +133,47 @@ defmodule StreaksWeb.HabitsLive.Index do
     {:noreply, assign(socket, :habits, habits)}
   end
 
+  def handle_event("close_quantity_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_quantity_modal, false)
+     |> assign(:quantity_habit_id, nil)
+     |> assign(:quantity_date, nil)
+     |> assign(:quantity_value, "")}
+  end
+
+  def handle_event("submit_quantity", %{"quantity" => quantity_str}, socket) do
+    with {quantity, _} <- Integer.parse(quantity_str),
+         true <- quantity > 0,
+         habit_id <- String.to_integer(socket.assigns.quantity_habit_id),
+         habit <- Habits.get_habit!(habit_id, socket.assigns.current_scope.user),
+         {:ok, _completion} <-
+           Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
+
+      {:noreply,
+       socket
+       |> assign(:habits, habits)
+       |> assign(:show_quantity_modal, false)
+       |> assign(:quantity_habit_id, nil)
+       |> assign(:quantity_date, nil)
+       |> assign(:quantity_value, "")}
+    else
+      _ ->
+        {:noreply, put_flash(socket, :error, "Please enter a valid positive number")}
+    end
+  end
+
   defp get_completion_dates(habit) do
     habit.completions
     |> Enum.map(& &1.completed_on)
     |> MapSet.new()
+  end
+
+  defp get_completions_map(habit) do
+    habit.completions
+    |> Enum.map(&{&1.completed_on, &1.quantity})
+    |> Map.new()
   end
 
   attr :habit, :map, required: true
@@ -126,6 +182,7 @@ defmodule StreaksWeb.HabitsLive.Index do
 
   def habit_component(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
+    completions_map = get_completions_map(assigns.habit)
     habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
     streaks = Habits.calculate_streaks(assigns.habit, assigns.timezone)
@@ -134,6 +191,7 @@ defmodule StreaksWeb.HabitsLive.Index do
     assigns =
       assigns
       |> assign(:completion_dates, completion_dates)
+      |> assign(:completions_map, completions_map)
       |> assign(:habit_days, habit_days)
       |> assign(:months, months)
       |> assign(:streaks, streaks)
@@ -208,6 +266,7 @@ defmodule StreaksWeb.HabitsLive.Index do
                 :for={{day, index} <- Enum.with_index(@habit_days)}
                 date={day}
                 completed={MapSet.member?(@completion_dates, day)}
+                quantity={Map.get(@completions_map, day)}
                 habit_id={@habit.id}
                 is_today={day == @today}
                 is_future={Date.compare(day, @today) == :gt}
@@ -239,15 +298,26 @@ defmodule StreaksWeb.HabitsLive.Index do
   # Individual habit cube component
   attr :date, Date, required: true
   attr :completed, :boolean, required: true
+  attr :quantity, :integer, default: nil
   attr :habit_id, :integer, required: true
   attr :is_today, :boolean, default: false
   attr :is_future, :boolean, default: false
 
   def habit_cube(assigns) do
+    # Build title with quantity if present
+    title =
+      if assigns.quantity do
+        "#{Date.to_iso8601(assigns.date)} - Quantity: #{assigns.quantity}"
+      else
+        Date.to_iso8601(assigns.date)
+      end
+
+    assigns = assign(assigns, :title, title)
+
     ~H"""
     <div
       class={[
-        "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200",
+        "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200 relative group",
         if(@is_future,
           do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
           else: "cursor-pointer transform hover:scale-125"
@@ -267,11 +337,18 @@ defmodule StreaksWeb.HabitsLive.Index do
           else: nil
         )
       ]}
-      title={Date.to_iso8601(@date)}
+      title={@title}
       phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
     >
+      <%!-- Show quantity badge on hover if present --%>
+      <div
+        :if={@quantity && @completed}
+        class="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-10"
+      >
+        {@quantity}
+      </div>
     </div>
     """
   end

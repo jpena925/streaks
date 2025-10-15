@@ -74,72 +74,69 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("rename_habit", %{"id" => id, "value" => new_name}, socket) do
-    case get_habit_or_handle_not_found(id, socket) do
-      {:error, socket} ->
-        {:noreply, socket}
+    with {:ok, habit} <- fetch_user_habit(id, socket),
+         {:ok, _habit} <- Habits.update_habit(habit, %{name: new_name}) do
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
+      {:noreply, assign(socket, :habits, habits)}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
 
-      {:ok, habit, socket} ->
-        case Habits.update_habit(habit, %{name: new_name}) do
-          {:ok, _habit} ->
-            habits = Habits.list_habits(socket.assigns.current_scope.user)
-            {:noreply, assign(socket, :habits, habits)}
-
-          {:error, _changeset} ->
-            {:noreply, put_flash(socket, :error, "Failed to rename habit")}
-        end
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to rename habit")}
     end
   end
 
   def handle_event("delete_habit", %{"id" => id}, socket) do
-    case get_habit_or_handle_not_found(id, socket) do
-      {:error, socket} ->
-        {:noreply, socket}
+    with {:ok, habit} <- fetch_user_habit(id, socket),
+         {:ok, _habit} <- Habits.delete_habit(habit) do
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
 
-      {:ok, habit, socket} ->
-        case Habits.delete_habit(habit) do
-          {:ok, _habit} ->
-            habits = Habits.list_habits(socket.assigns.current_scope.user)
+      {:noreply,
+       socket
+       |> assign(:habits, habits)
+       |> put_flash(:info, "Habit deleted successfully!")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
 
-            {:noreply,
-             socket
-             |> assign(:habits, habits)
-             |> put_flash(:info, "Habit deleted successfully!")}
-
-          {:error, _changeset} ->
-            {:noreply, put_flash(socket, :error, "Error deleting habit")}
-        end
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Error deleting habit")}
     end
   end
 
   def handle_event("log_day", %{"habit_id" => habit_id, "date" => date}, socket) do
-    habit = Habits.get_habit!(String.to_integer(habit_id), socket.assigns.current_scope.user)
+    with {:ok, habit} <- fetch_user_habit(habit_id, socket) do
+      if habit.has_quantity do
+        {:noreply,
+         socket
+         |> assign(:show_quantity_modal, true)
+         |> assign(:quantity_habit_id, habit_id)
+         |> assign(:quantity_date, date)
+         |> assign(:quantity_value, "")}
+      else
+        case Habits.log_habit_completion(habit, date) do
+          {:ok, _completion} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
+            {:noreply, assign(socket, :habits, habits)}
 
-    if habit.has_quantity do
-      {:noreply,
-       socket
-       |> assign(:show_quantity_modal, true)
-       |> assign(:quantity_habit_id, habit_id)
-       |> assign(:quantity_date, date)
-       |> assign(:quantity_value, "")}
-    else
-      case Habits.log_habit_completion(habit, date) do
-        {:ok, _completion} ->
-          habits = Habits.list_habits(socket.assigns.current_scope.user)
-          {:noreply, assign(socket, :habits, habits)}
-
-        {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Error logging completion")}
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Error logging completion")}
+        end
       end
+    else
+      :error -> {:noreply, habit_not_found(socket)}
     end
   end
 
   def handle_event("unlog_day", %{"habit_id" => habit_id, "date" => date}, socket) do
-    habit = Habits.get_habit!(String.to_integer(habit_id), socket.assigns.current_scope.user)
-
-    :ok = Habits.unlog_habit_completion(habit, date)
-    habits = Habits.list_habits(socket.assigns.current_scope.user)
-
-    {:noreply, assign(socket, :habits, habits)}
+    with {:ok, habit} <- fetch_user_habit(habit_id, socket) do
+      :ok = Habits.unlog_habit_completion(habit, date)
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
+      {:noreply, assign(socket, :habits, habits)}
+    else
+      :error -> {:noreply, habit_not_found(socket)}
+    end
   end
 
   def handle_event("close_quantity_modal", _params, socket) do
@@ -154,8 +151,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("submit_quantity", %{"quantity" => quantity_str}, socket) do
     with {quantity, _} <- Integer.parse(quantity_str),
          true <- quantity > 0,
-         habit_id <- String.to_integer(socket.assigns.quantity_habit_id),
-         habit <- Habits.get_habit!(habit_id, socket.assigns.current_scope.user),
+         {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket),
          {:ok, _completion} <-
            Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
       habits = Habits.list_habits(socket.assigns.current_scope.user)
@@ -168,6 +164,9 @@ defmodule StreaksWeb.HabitsLive.Index do
        |> assign(:quantity_date, nil)
        |> assign(:quantity_value, "")}
     else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
       _ ->
         {:noreply, put_flash(socket, :error, "Please enter a valid positive number")}
     end
@@ -369,23 +368,22 @@ defmodule StreaksWeb.HabitsLive.Index do
     |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}))
   end
 
-  defp get_habit_or_handle_not_found(
-         id,
-         socket
-       ) do
-    case Habits.get_habit(String.to_integer(id), socket.assigns.current_scope.user) do
-      nil ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
+  defp fetch_user_habit(habit_id, socket) when is_binary(habit_id) do
+    fetch_user_habit(String.to_integer(habit_id), socket)
+  end
 
-        updated_socket =
-          socket
-          |> assign(:habits, habits)
-          |> put_flash(:error, "Habit not found. It may have been deleted.")
-
-        {:error, updated_socket}
-
-      habit ->
-        {:ok, habit, socket}
+  defp fetch_user_habit(habit_id, socket) when is_integer(habit_id) do
+    case Habits.get_habit(habit_id, socket.assigns.current_scope.user) do
+      nil -> :error
+      habit -> {:ok, habit}
     end
+  end
+
+  defp habit_not_found(socket) do
+    habits = Habits.list_habits(socket.assigns.current_scope.user)
+
+    socket
+    |> assign(:habits, habits)
+    |> put_flash(:error, "Habit not found. It may have been deleted.")
   end
 end

@@ -12,6 +12,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_habit_id, nil)
       |> assign(:quantity_date, nil)
       |> assign(:quantity_value, "")
+      |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}))
 
     socket =
       if connected?(socket) do
@@ -39,16 +40,19 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("hide_new_habit_form", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_new_habit_form, false)
-     |> assign(:new_habit_name, "")}
+    {:noreply, reset_new_habit_form(socket)}
+  end
+
+  def handle_event("validate", %{"habit" => habit_params}, socket) do
+    form = to_form(habit_params)
+    {:noreply, assign(socket, :form, form)}
   end
 
   def handle_event("create_habit", %{"habit" => habit_params}, socket) do
-    # Convert checkbox value to boolean
-    has_quantity = Map.get(habit_params, "has_quantity") == "true"
-    attrs = %{name: habit_params["name"], has_quantity: has_quantity}
+    attrs = %{
+      name: habit_params["name"],
+      has_quantity: habit_params["has_quantity"]
+    }
 
     case Habits.create_habit(socket.assigns.current_scope.user, attrs) do
       {:ok, _habit} ->
@@ -57,8 +61,7 @@ defmodule StreaksWeb.HabitsLive.Index do
         {:noreply,
          socket
          |> assign(:habits, habits)
-         |> assign(:show_new_habit_form, false)
-         |> assign(:new_habit_name, "")
+         |> reset_new_habit_form()
          |> put_flash(:info, "Habit created successfully!")}
 
       {:error, changeset} ->
@@ -71,32 +74,40 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("rename_habit", %{"id" => id, "value" => new_name}, socket) do
-    habit = Habits.get_habit!(String.to_integer(id), socket.assigns.current_scope.user)
+    case get_habit_or_handle_not_found(id, socket) do
+      {:error, socket} ->
+        {:noreply, socket}
 
-    case Habits.update_habit(habit, %{name: new_name}) do
-      {:ok, _habit} ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
-        {:noreply, assign(socket, :habits, habits)}
+      {:ok, habit, socket} ->
+        case Habits.update_habit(habit, %{name: new_name}) do
+          {:ok, _habit} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
+            {:noreply, assign(socket, :habits, habits)}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Error updating habit name")}
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Failed to rename habit")}
+        end
     end
   end
 
   def handle_event("delete_habit", %{"id" => id}, socket) do
-    habit = Habits.get_habit!(String.to_integer(id), socket.assigns.current_scope.user)
+    case get_habit_or_handle_not_found(id, socket) do
+      {:error, socket} ->
+        {:noreply, socket}
 
-    case Habits.delete_habit(habit) do
-      {:ok, _habit} ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
+      {:ok, habit, socket} ->
+        case Habits.delete_habit(habit) do
+          {:ok, _habit} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
 
-        {:noreply,
-         socket
-         |> assign(:habits, habits)
-         |> put_flash(:info, "Habit deleted successfully!")}
+            {:noreply,
+             socket
+             |> assign(:habits, habits)
+             |> put_flash(:info, "Habit deleted successfully!")}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Error deleting habit")}
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Error deleting habit")}
+        end
     end
   end
 
@@ -104,7 +115,6 @@ defmodule StreaksWeb.HabitsLive.Index do
     habit = Habits.get_habit!(String.to_integer(habit_id), socket.assigns.current_scope.user)
 
     if habit.has_quantity do
-      # Show modal to get quantity
       {:noreply,
        socket
        |> assign(:show_quantity_modal, true)
@@ -112,7 +122,6 @@ defmodule StreaksWeb.HabitsLive.Index do
        |> assign(:quantity_date, date)
        |> assign(:quantity_value, "")}
     else
-      # Log without quantity
       case Habits.log_habit_completion(habit, date) do
         {:ok, _completion} ->
           habits = Habits.list_habits(socket.assigns.current_scope.user)
@@ -209,7 +218,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           phx-value-id={@habit.id}
           class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all w-full mb-3"
         />
-        
+
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -221,13 +230,13 @@ defmodule StreaksWeb.HabitsLive.Index do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
+
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
+
     <!-- Delete button -->
           <.icon_button
             phx-click="delete_habit"
@@ -238,7 +247,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           />
         </div>
       </div>
-      
+
     <!-- Grid container -->
       <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
         <!-- Scrollable container for both labels and grid -->
@@ -259,7 +268,7 @@ defmodule StreaksWeb.HabitsLive.Index do
                 </span>
               </div>
             </div>
-            
+
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <.habit_cube
@@ -274,7 +283,7 @@ defmodule StreaksWeb.HabitsLive.Index do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -351,5 +360,32 @@ defmodule StreaksWeb.HabitsLive.Index do
       </div>
     </div>
     """
+  end
+
+  defp reset_new_habit_form(socket) do
+    socket
+    |> assign(:show_new_habit_form, false)
+    |> assign(:new_habit_name, "")
+    |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}))
+  end
+
+  defp get_habit_or_handle_not_found(
+         id,
+         socket
+       ) do
+    case Habits.get_habit(String.to_integer(id), socket.assigns.current_scope.user) do
+      nil ->
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+
+        updated_socket =
+          socket
+          |> assign(:habits, habits)
+          |> put_flash(:error, "Habit not found. It may have been deleted.")
+
+        {:error, updated_socket}
+
+      habit ->
+        {:ok, habit, socket}
+    end
   end
 end

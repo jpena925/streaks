@@ -33,6 +33,18 @@ defmodule Streaks.Habits do
 
   @doc """
   Gets a single habit.
+  Returns nil if not found.
+  """
+  def get_habit(id, %User{id: user_id}) do
+    Habit
+    |> where([h], h.id == ^id and h.user_id == ^user_id)
+    |> preload(:completions)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets a single habit.
+  Raises if not found.
   """
   def get_habit!(id, %User{id: user_id}) do
     Habit

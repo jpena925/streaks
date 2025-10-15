@@ -312,18 +312,14 @@ defmodule StreaksWeb.HabitsLive.Index do
   attr :is_future, :boolean, default: false
 
   def habit_cube(assigns) do
-    # Build title with quantity if present
-    title =
-      if assigns.quantity do
-        "#{Date.to_iso8601(assigns.date)} - Quantity: #{assigns.quantity}"
-      else
-        Date.to_iso8601(assigns.date)
-      end
+    # Build title - simpler for non-quantity
+    title = Date.to_iso8601(assigns.date)
 
     assigns = assign(assigns, :title, title)
 
     ~H"""
     <div
+      id={"habit-cube-#{@habit_id}-#{Date.to_iso8601(@date)}"}
       class={[
         "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200 relative group",
         if(@is_future,
@@ -345,18 +341,13 @@ defmodule StreaksWeb.HabitsLive.Index do
           else: nil
         )
       ]}
-      title={@title}
+      title={if(@quantity && @completed, do: nil, else: @title)}
       phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
+      phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}
+      data-tooltip-text={if(@quantity && @completed, do: "#{@quantity} times", else: nil)}
     >
-      <%!-- Show quantity badge on hover if present --%>
-      <div
-        :if={@quantity && @completed}
-        class="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-10"
-      >
-        {@quantity}
-      </div>
     </div>
     """
   end

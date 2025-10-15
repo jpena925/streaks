@@ -17,12 +17,10 @@ export default {
 		document.body.appendChild(tooltip);
 		this.tooltip = tooltip;
 
-		// Show tooltip on hover
 		this.el.addEventListener("mouseenter", () => {
 			const rect = this.el.getBoundingClientRect();
 			const tooltipRect = tooltip.getBoundingClientRect();
 
-			// Position above the element, centered
 			tooltip.style.left = `${
 				rect.left + rect.width / 2 - tooltipRect.width / 2
 			}px`;

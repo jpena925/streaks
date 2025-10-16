@@ -312,10 +312,32 @@ defmodule StreaksWeb.HabitsLive.Index do
   attr :is_future, :boolean, default: false
 
   def habit_cube(assigns) do
-    # Build title - simpler for non-quantity
     title = Date.to_iso8601(assigns.date)
 
-    assigns = assign(assigns, :title, title)
+    completed_classes =
+      if assigns.quantity do
+        cond do
+          assigns.quantity <= 2 ->
+            "bg-green-300 border-transparent shadow-sm"
+
+          assigns.quantity <= 5 ->
+            "bg-green-500 border-transparent shadow-sm"
+
+          assigns.quantity <= 8 ->
+            "bg-green-700 border-transparent shadow-sm"
+
+          true ->
+            # 9+
+            "bg-green-800 border-transparent shadow-sm"
+        end
+      else
+        "bg-green-500 border-transparent shadow-sm"
+      end
+
+    assigns =
+      assigns
+      |> assign(:title, title)
+      |> assign(:completed_classes, completed_classes)
 
     ~H"""
     <div
@@ -326,11 +348,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
           else: "cursor-pointer transform hover:scale-125"
         ),
-        if(!@is_future && @completed,
-          do:
-            "bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 border-transparent shadow-sm",
-          else: nil
-        ),
+        if(!@is_future && @completed, do: @completed_classes, else: nil),
         if(!@is_future && !@completed,
           do:
             "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border-transparent hover:border-gray-400 dark:hover:border-gray-500",

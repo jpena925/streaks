@@ -39,3 +39,7 @@ Streaks are calculated on every page load from your completion data:
 - Current streak counts backward from today/yesterday
 - Longest streak finds the longest consecutive run ever
 
+## Contributions
+
+Work on a feature branch and open a PR. I actually use this all the time so am open to ideas how to make it better, even if its just a refactor.
+

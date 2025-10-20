@@ -54,6 +54,7 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
+  # DNS clustering is not needed for Gigalixir single-instance deployments
   config :streaks, :dns_cluster_query, nil
 
   config :streaks, StreaksWeb.Endpoint,

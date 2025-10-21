@@ -38,7 +38,8 @@ if config_env() == :prod do
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6,
-    ssl: [
+    ssl: true,
+    ssl_opts: [
       verify: :verify_none,
       cacerts: :public_key.cacerts_get()
     ]

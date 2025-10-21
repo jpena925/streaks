@@ -21,10 +21,6 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
-  # Configure Erlang inet to use native DNS resolution
-  # This helps fix DNS resolution issues in some container environments
-  :inet_db.set_lookup([:native])
-
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """

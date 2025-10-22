@@ -12,7 +12,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_habit_id, nil)
       |> assign(:quantity_date, nil)
       |> assign(:quantity_value, "")
-      |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}))
+      |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
 
     socket =
       if connected?(socket) do
@@ -44,7 +44,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("validate", %{"habit" => habit_params}, socket) do
-    form = to_form(habit_params)
+    form = to_form(habit_params, as: :habit)
     {:noreply, assign(socket, :form, form)}
   end
 
@@ -374,7 +374,7 @@ defmodule StreaksWeb.HabitsLive.Index do
     socket
     |> assign(:show_new_habit_form, false)
     |> assign(:new_habit_name, "")
-    |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}))
+    |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
   end
 
   defp fetch_user_habit(habit_id, socket) when is_binary(habit_id) do

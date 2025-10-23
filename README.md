@@ -26,7 +26,7 @@ Visit `localhost:4000` and you're good to go.
 - Phoenix 1.8 + LiveView
 - PostgreSQL
 - Tailwind CSS
-- Deployed with Docker (Fly.io ready)
+- Deployed via Gigalixir
 
 ## How it works
 

@@ -27,24 +27,9 @@ Repo.delete_all(User)
   |> User.confirm_changeset()
   |> Repo.insert()
 
-# create workout (non-quantity) habit
-workout_habit =
-  Repo.insert!(%Habit{
-    name: "Workout",
-    has_quantity: false,
-    user_id: user.id
-  })
-
-# create drinks habit (with quantity tracking)
-drinks_habit =
-  Repo.insert!(%Habit{
-    name: "Drinks",
-    has_quantity: true,
-    user_id: user.id
-  })
-
-# for workout habit completions
 today = Date.utc_today()
+earliest_date = Date.add(today, -13)
+habit_created_at = DateTime.new!(earliest_date, ~T[00:00:00], "Etc/UTC")
 
 workout_dates = [
   Date.add(today, -13),
@@ -58,14 +43,6 @@ workout_dates = [
   Date.add(today, -1)
 ]
 
-for date <- workout_dates do
-  Repo.insert!(%HabitCompletion{
-    habit_id: workout_habit.id,
-    completed_on: date
-  })
-end
-
-# for drinks habit completions with quantities
 drinks_data = [
   {Date.add(today, -13), 2},
   {Date.add(today, -12), 3},
@@ -78,6 +55,33 @@ drinks_data = [
   {Date.add(today, -2), 2},
   {Date.add(today, -1), 5}
 ]
+
+# create habits with backdated created_at
+workout_habit =
+  Repo.insert!(%Habit{
+    name: "Workout",
+    has_quantity: false,
+    user_id: user.id,
+    inserted_at: habit_created_at,
+    updated_at: habit_created_at
+  })
+
+drinks_habit =
+  Repo.insert!(%Habit{
+    name: "Drinks",
+    has_quantity: true,
+    user_id: user.id,
+    inserted_at: habit_created_at,
+    updated_at: habit_created_at
+  })
+
+# mark habits as completed
+for date <- workout_dates do
+  Repo.insert!(%HabitCompletion{
+    habit_id: workout_habit.id,
+    completed_on: date
+  })
+end
 
 for {date, quantity} <- drinks_data do
   Repo.insert!(%HabitCompletion{

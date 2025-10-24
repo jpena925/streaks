@@ -19,6 +19,10 @@ mix setup
 mix phx.server
 ```
 
+After running `mix setup` which runs the seeds, login with:
+user: demo@streaks.com
+password: password123456
+
 Visit `localhost:4000` and you're good to go.
 
 ## Tech stack

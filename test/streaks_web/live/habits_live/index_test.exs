@@ -1,0 +1,412 @@
+defmodule StreaksWeb.HabitsLive.IndexTest do
+  use StreaksWeb.ConnCase, async: true
+
+  import Phoenix.LiveViewTest
+  import Streaks.AccountsFixtures
+  import Streaks.HabitsFixtures
+
+  alias Streaks.Habits
+
+  describe "mount and authentication" do
+    test "redirects if user is not logged in", %{conn: conn} do
+      assert {:error, redirect} = live(conn, ~p"/streaks")
+
+      assert {:redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"/users/log-in"
+      assert %{"error" => "You must log in to access this page."} = flash
+    end
+
+    test "renders habits index page for authenticated user", %{conn: conn} do
+      user = user_fixture()
+
+      {:ok, _lv, html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/streaks")
+
+      assert html =~ "Your Streaks"
+      assert html =~ "Add Habit"
+    end
+
+    test "loads user's habits on mount", %{conn: conn} do
+      user = user_fixture()
+      _habit1 = habit_fixture(user, %{name: "Morning Run"})
+      _habit2 = habit_fixture(user, %{name: "Read Books"})
+
+      {:ok, _lv, html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/streaks")
+
+      assert html =~ "Morning Run"
+      assert html =~ "Read Books"
+    end
+
+    test "only shows habits for the current user", %{conn: conn} do
+      user1 = user_fixture()
+      user2 = user_fixture()
+
+      _habit1 = habit_fixture(user1, %{name: "User 1 Habit"})
+      _habit2 = habit_fixture(user2, %{name: "User 2 Habit"})
+
+      {:ok, _lv, html} =
+        conn
+        |> log_in_user(user1)
+        |> live(~p"/streaks")
+
+      assert html =~ "User 1 Habit"
+      refute html =~ "User 2 Habit"
+    end
+  end
+
+  describe "new habit form" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{conn: log_in_user(conn, user), user: user}
+    end
+
+    test "shows new habit form when button is clicked", %{conn: conn} do
+      {:ok, lv, html} = live(conn, ~p"/streaks")
+
+      refute html =~ "Create New Habit"
+
+      html = lv |> element("button", "Add Habit") |> render_click()
+
+      assert html =~ "Create New Habit"
+    end
+
+    test "hides new habit form when cancel is clicked", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      html = lv |> element("button", "Add Habit") |> render_click()
+      assert html =~ "Create New Habit"
+
+      html = lv |> element("button[phx-click='hide_new_habit_form']") |> render_click()
+      refute html =~ "Create New Habit"
+    end
+  end
+
+  describe "create habit" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{conn: log_in_user(conn, user), user: user}
+    end
+
+    test "creates a new habit successfully", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv |> element("button", "Add Habit") |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='create_habit']", %{
+          "habit" => %{"name" => "Daily Exercise", "has_quantity" => "false"}
+        })
+        |> render_submit()
+
+      habits = Habits.list_habits(user)
+      assert length(habits) == 1
+      assert hd(habits).name == "Daily Exercise"
+      refute hd(habits).has_quantity
+
+      refute html =~ "Create New Habit"
+      assert html =~ "Daily Exercise"
+    end
+
+    test "creates a habit with quantity tracking", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv |> element("button", "Add Habit") |> render_click()
+
+      lv
+      |> form("form[phx-submit='create_habit']", %{
+        "habit" => %{"name" => "Push-ups", "has_quantity" => "true"}
+      })
+      |> render_submit()
+
+      habits = Habits.list_habits(user)
+      assert length(habits) == 1
+      assert hd(habits).name == "Push-ups"
+      assert hd(habits).has_quantity
+    end
+
+    test "shows error when habit name is empty", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv |> element("button", "Add Habit") |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='create_habit']", %{
+          "habit" => %{"name" => "", "has_quantity" => "false"}
+        })
+        |> render_submit()
+
+      habits = Habits.list_habits(user)
+      assert length(habits) == 0
+
+      assert html =~ "Create New Habit"
+    end
+  end
+
+  describe "delete habit" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      habit = habit_fixture(user, %{name: "To Delete"})
+      %{conn: log_in_user(conn, user), user: user, habit: habit}
+    end
+
+    test "deletes a habit successfully", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      html =
+        lv
+        |> element("button[phx-click='delete_habit'][phx-value-id='#{habit.id}']")
+        |> render_click()
+
+      assert Habits.get_habit(habit.id, user) == nil
+
+      refute html =~ "To Delete"
+      assert html =~ "No habits yet"
+    end
+  end
+
+  describe "log habit completion" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      habit = habit_fixture(user, %{name: "Daily Habit"})
+      %{conn: log_in_user(conn, user), user: user, habit: habit}
+    end
+
+    test "logs a completion for a habit without quantity", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      lv
+      |> element(
+        "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+      )
+      |> render_click()
+
+      updated_habit = Habits.get_habit(habit.id, user)
+      assert length(updated_habit.completions) == 1
+    end
+
+    test "opens quantity modal for habit with quantity", %{conn: conn, user: user} do
+      habit = habit_with_quantity_fixture(user, %{name: "Push-ups"})
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      html =
+        lv
+        |> element(
+          "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+        )
+        |> render_click()
+
+      assert html =~ "Enter Quantity"
+      assert html =~ "Save"
+    end
+  end
+
+  describe "unlog habit completion" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      date = Date.utc_today()
+      habit = habit_with_completions_fixture(user, [date])
+      %{conn: log_in_user(conn, user), user: user, habit: habit, date: date}
+    end
+
+    test "removes a completion", %{conn: conn, user: user, habit: habit, date: date} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      assert length(habit.completions) == 1
+
+      date_str = Date.to_iso8601(date)
+
+      lv
+      |> element(
+        "div[phx-click='unlog_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date_str}']"
+      )
+      |> render_click()
+
+      updated_habit = Habits.get_habit(habit.id, user)
+      assert length(updated_habit.completions) == 0
+    end
+  end
+
+  describe "quantity modal" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      habit = habit_with_quantity_fixture(user, %{name: "Push-ups"})
+      %{conn: log_in_user(conn, user), user: user, habit: habit}
+    end
+
+    test "closes quantity modal", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      html =
+        lv
+        |> element(
+          "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+        )
+        |> render_click()
+
+      assert html =~ "Enter Quantity"
+
+      html =
+        lv
+        |> element("button[phx-click='close_quantity_modal']")
+        |> render_click()
+
+      refute html =~ "Enter Quantity"
+    end
+
+    test "submits valid quantity", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      lv
+      |> element(
+        "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='submit_quantity']", %{"quantity" => "25"})
+        |> render_submit()
+
+      updated_habit = Habits.get_habit(habit.id, user)
+      assert length(updated_habit.completions) == 1
+      assert hd(updated_habit.completions).quantity == 25
+
+      refute html =~ "Enter Quantity"
+    end
+
+    test "rejects invalid quantity (non-positive)", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      lv
+      |> element(
+        "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='submit_quantity']", %{"quantity" => "0"})
+        |> render_submit()
+
+      updated_habit = Habits.get_habit(habit.id, user)
+      assert length(updated_habit.completions) == 0
+
+      assert html =~ "Enter Quantity"
+    end
+
+    test "rejects invalid quantity (non-numeric)", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      date = Date.utc_today() |> Date.to_iso8601()
+
+      lv
+      |> element(
+        "div[phx-click='log_day'][phx-value-habit_id='#{habit.id}'][phx-value-date='#{date}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='submit_quantity']", %{"quantity" => "abc"})
+        |> render_submit()
+
+      updated_habit = Habits.get_habit(habit.id, user)
+      assert length(updated_habit.completions) == 0
+
+      assert html =~ "Enter Quantity"
+    end
+  end
+
+  describe "habit display" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{conn: log_in_user(conn, user), user: user}
+    end
+
+    test "displays current streak", %{conn: conn, user: user} do
+      today = Date.utc_today()
+      yesterday = Date.add(today, -1)
+      _habit = habit_with_completions_fixture(user, [yesterday, today])
+
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "2 days"
+    end
+
+    test "displays longest streak", %{conn: conn, user: user} do
+      today = Date.utc_today()
+      dates = Enum.map(-4..0, &Date.add(today, &1))
+      _habit = habit_with_completions_fixture(user, dates)
+
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "Best: 5"
+    end
+
+    test "displays habit with quantity completions", %{conn: conn, user: user} do
+      today = Date.utc_today()
+      completions = [{today, 10}, {Date.add(today, -1), 5}]
+      habit = habit_with_quantity_completions_fixture(user, completions)
+
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ habit.name
+    end
+
+    test "displays empty state when no habits exist", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "No habits yet"
+    end
+
+    test "displays multiple habits", %{conn: conn, user: user} do
+      _habit1 = habit_fixture(user, %{name: "Habit One"})
+      _habit2 = habit_fixture(user, %{name: "Habit Two"})
+      _habit3 = habit_fixture(user, %{name: "Habit Three"})
+
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "Habit One"
+      assert html =~ "Habit Two"
+      assert html =~ "Habit Three"
+    end
+  end
+
+  describe "habit cube component" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      today = Date.utc_today()
+      habit = habit_with_completions_fixture(user, [today])
+      %{conn: log_in_user(conn, user), user: user, habit: habit, today: today}
+    end
+
+    test "renders completed days with correct styling", %{conn: conn, today: today, habit: habit} do
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "habit-cube-#{habit.id}-#{Date.to_iso8601(today)}"
+    end
+
+    test "renders future days as disabled", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      assert html =~ "cursor-not-allowed"
+    end
+  end
+end

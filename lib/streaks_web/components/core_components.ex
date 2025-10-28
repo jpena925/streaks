@@ -96,8 +96,8 @@ defmodule StreaksWeb.CoreComponents do
   def badge(assigns) do
     ~H"""
     <div class={[
-      "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap",
-      @variant == "success" && "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-sm",
+      "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded font-semibold text-xs sm:text-sm whitespace-nowrap",
+      @variant == "success" && "bg-green-500 text-white",
       @variant == "info" && "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
       @variant == "neutral" && "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
       @class
@@ -126,7 +126,7 @@ defmodule StreaksWeb.CoreComponents do
     ~H"""
     <button
       class={[
-        "group relative inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105",
+        "inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded transition-colors duration-200",
         @class
       ]}
       {@rest}
@@ -182,7 +182,7 @@ defmodule StreaksWeb.CoreComponents do
   def card(assigns) do
     ~H"""
     <div class={[
-      "bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 sm:p-8 border border-gray-100 dark:border-gray-700",
+      "bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4 sm:p-8",
       @class
     ]}>
       {render_slot(@inner_block)}

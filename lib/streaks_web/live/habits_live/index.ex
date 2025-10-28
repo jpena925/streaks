@@ -215,9 +215,9 @@ defmodule StreaksWeb.HabitsLive.Index do
           value={@habit.name}
           phx-blur="rename_habit"
           phx-value-id={@habit.id}
-          class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all w-full mb-3"
+          class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded transition-colors w-full mb-3"
         />
-        
+
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -229,13 +229,13 @@ defmodule StreaksWeb.HabitsLive.Index do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
+
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
+
     <!-- Delete button -->
           <.icon_button
             phx-click="delete_habit"
@@ -246,9 +246,9 @@ defmodule StreaksWeb.HabitsLive.Index do
           />
         </div>
       </div>
-      
+
     <!-- Grid container -->
-      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
+      <div class="bg-gray-50 dark:bg-gray-900/50 rounded p-3 sm:p-4">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
@@ -267,7 +267,7 @@ defmodule StreaksWeb.HabitsLive.Index do
                 </span>
               </div>
             </div>
-            
+
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <.habit_cube
@@ -282,7 +282,7 @@ defmodule StreaksWeb.HabitsLive.Index do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -343,10 +343,10 @@ defmodule StreaksWeb.HabitsLive.Index do
     <div
       id={"habit-cube-#{@habit_id}-#{Date.to_iso8601(@date)}"}
       class={[
-        "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200 relative group",
+        "w-3.5 h-3.5 rounded-sm border-2 transition-colors duration-200 relative group",
         if(@is_future,
           do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
-          else: "cursor-pointer transform hover:scale-125"
+          else: "cursor-pointer hover:opacity-80"
         ),
         if(!@is_future && @completed, do: @completed_classes, else: nil),
         if(!@is_future && !@completed,

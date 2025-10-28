@@ -4,10 +4,10 @@
 
 ### 1. Design Cleanup
 
-- [ ] Remove gradients (backgrounds, text, badges, buttons)
-- [ ] Remove hover scale/transform effects
-- [ ] Pick one shadow depth (or just use borders)
-- [ ] Pick one border-radius value
+- [x] Remove gradients (backgrounds, text, badges, buttons)
+- [x] Remove hover scale/transform effects
+- [x] Pick one shadow depth (or just use borders) - using borders mostly
+- [x] Pick one border-radius value - using `rounded` (4px)
 - [ ] Try terminal color scheme (green/amber on dark, or brutalist black/white)
 
 ### 2. Split Up the LiveView

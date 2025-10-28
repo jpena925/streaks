@@ -209,14 +209,19 @@ defmodule StreaksWeb.HabitsLive.Index do
     <.card>
       <!-- Header -->
       <div class="mb-4">
-        <!-- Editable habit name -->
-        <input
-          type="text"
-          value={@habit.name}
-          phx-blur="rename_habit"
-          phx-value-id={@habit.id}
-          class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors w-full mb-2"
-        />
+        <!-- Drag handle and editable habit name -->
+        <div class="flex items-center gap-2 mb-2">
+          <button class="text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing">
+            <.icon name="hero-bars-3" class="w-4 h-4" />
+          </button>
+          <input
+            type="text"
+            value={@habit.name}
+            phx-blur="rename_habit"
+            phx-value-id={@habit.id}
+            class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
+          />
+        </div>
         
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">

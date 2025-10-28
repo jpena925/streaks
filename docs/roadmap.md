@@ -8,7 +8,7 @@
 - [x] Remove hover scale/transform effects
 - [x] Pick one shadow depth (or just use borders) - using borders mostly
 - [x] Pick one border-radius value - using `rounded` (4px)
-- [ ] Try terminal color scheme (green/amber on dark, or brutalist black/white)
+- [x] Try terminal color scheme (green/amber on dark, or brutalist black/white)
 
 ### 2. Split Up the LiveView
 

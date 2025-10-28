@@ -208,19 +208,19 @@ defmodule StreaksWeb.HabitsLive.Index do
     ~H"""
     <.card>
       <!-- Header -->
-      <div class="mb-4 sm:mb-6">
+      <div class="mb-4">
         <!-- Editable habit name -->
         <input
           type="text"
           value={@habit.name}
           phx-blur="rename_habit"
           phx-value-id={@habit.id}
-          class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded transition-colors w-full mb-3"
+          class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors w-full mb-2"
         />
 
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap">
             <!-- Current streak badge -->
             <.badge
               variant={if(@streaks.current_streak > 0, do: "success", else: "neutral")}
@@ -248,7 +248,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       </div>
 
     <!-- Grid container -->
-      <div class="bg-gray-50 dark:bg-gray-900/50 rounded p-3 sm:p-4">
+      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
@@ -355,7 +355,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           else: nil
         ),
         if(@is_today,
-          do: "ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-1 dark:ring-offset-gray-900",
+          do: "ring-2 ring-green-500 dark:ring-green-400 ring-offset-1 dark:ring-offset-gray-900",
           else: nil
         )
       ]}

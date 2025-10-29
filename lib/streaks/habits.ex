@@ -57,7 +57,7 @@ defmodule Streaks.Habits do
   Creates a habit.
   Automatically sets position to the end of the user's habit list.
   """
-  def create_habit(%User{id: user_id} = user, attrs \\ %{}) do
+  def create_habit(%User{id: user_id} = _user, attrs \\ %{}) do
     position = get_next_position(user_id)
     attrs = Map.put(attrs, :position, position)
 
@@ -110,7 +110,7 @@ defmodule Streaks.Habits do
       {:error, :invalid_habits}
     else
       Enum.reduce_while(Enum.with_index(habit_ids, 1), {:ok, []}, fn {habit_id, position},
-                                                                      {:ok, _acc} ->
+                                                                     {:ok, _acc} ->
         habit = Enum.find(habits, &(&1.id == habit_id))
 
         case update_habit(habit, %{position: position}) do

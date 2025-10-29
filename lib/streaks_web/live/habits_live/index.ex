@@ -172,6 +172,19 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  def handle_event("reorder", %{"ids" => ids}, socket) do
+    habit_ids = Enum.map(ids, &String.to_integer/1)
+
+    case Habits.reorder_habits(socket.assigns.current_scope.user, habit_ids) do
+      {:ok, _habits} ->
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+        {:noreply, assign(socket, :habits, habits)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+    end
+  end
+
   defp get_completion_dates(habit) do
     habit.completions
     |> Enum.map(& &1.completed_on)
@@ -211,7 +224,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       <div class="mb-4">
         <!-- Drag handle and editable habit name -->
         <div class="flex items-center gap-2 mb-2">
-          <button class="text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing">
+          <button class="drag-handle text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing" title="Drag to reorder">
             <.icon name="hero-bars-3" class="w-4 h-4" />
           </button>
           <input
@@ -222,7 +235,7 @@ defmodule StreaksWeb.HabitsLive.Index do
             class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
           />
         </div>
-        
+
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
@@ -234,13 +247,13 @@ defmodule StreaksWeb.HabitsLive.Index do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
+
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
+
     <!-- Delete button -->
           <.icon_button
             phx-click="delete_habit"
@@ -251,7 +264,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           />
         </div>
       </div>
-      
+
     <!-- Grid container -->
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
@@ -272,7 +285,7 @@ defmodule StreaksWeb.HabitsLive.Index do
                 </span>
               </div>
             </div>
-            
+
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <.habit_cube
@@ -287,7 +300,7 @@ defmodule StreaksWeb.HabitsLive.Index do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">

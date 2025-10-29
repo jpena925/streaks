@@ -9,6 +9,7 @@ defmodule Streaks.Habits.Habit do
     field :name, :string
     field :has_quantity, :boolean, default: false
     field :archived_at, :utc_datetime
+    field :position, :integer
 
     belongs_to :user, User
     has_many :completions, HabitCompletion, on_delete: :delete_all
@@ -19,7 +20,7 @@ defmodule Streaks.Habits.Habit do
   @doc false
   def changeset(habit, attrs) do
     habit
-    |> cast(attrs, [:name, :has_quantity, :archived_at])
+    |> cast(attrs, [:name, :has_quantity, :archived_at, :position])
     |> validate_required([:name])
     |> validate_length(:name, min: 1, max: 100)
     |> trim_name()

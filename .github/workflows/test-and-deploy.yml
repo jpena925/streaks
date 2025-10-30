@@ -64,3 +64,4 @@ jobs:
           gigalixir login --email="$GIGALIXIR_EMAIL" --password="$GIGALIXIR_PASSWORD" --yes
           gigalixir git:remote $GIGALIXIR_APP_NAME
           git push gigalixir HEAD:refs/heads/main --force
+          gigalixir ps:migrate --app_name=$GIGALIXIR_APP_NAME

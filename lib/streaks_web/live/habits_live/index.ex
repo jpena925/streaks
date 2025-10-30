@@ -172,6 +172,19 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  def handle_event("reorder", %{"ids" => ids}, socket) do
+    habit_ids = Enum.map(ids, &String.to_integer/1)
+
+    case Habits.reorder_habits(socket.assigns.current_scope.user, habit_ids) do
+      {:ok, _habits} ->
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+        {:noreply, assign(socket, :habits, habits)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+    end
+  end
+
   defp get_completion_dates(habit) do
     habit.completions
     |> Enum.map(& &1.completed_on)
@@ -208,19 +221,27 @@ defmodule StreaksWeb.HabitsLive.Index do
     ~H"""
     <.card>
       <!-- Header -->
-      <div class="mb-4 sm:mb-6">
-        <!-- Editable habit name -->
-        <input
-          type="text"
-          value={@habit.name}
-          phx-blur="rename_habit"
-          phx-value-id={@habit.id}
-          class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-700 focus:px-3 focus:py-2 rounded-lg transition-all w-full mb-3"
-        />
+      <div class="mb-4">
+        <!-- Drag handle and editable habit name -->
+        <div class="flex items-center gap-2 mb-2">
+          <button
+            class="drag-handle text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing"
+            title="Drag to reorder"
+          >
+            <.icon name="hero-bars-3" class="w-4 h-4" />
+          </button>
+          <input
+            type="text"
+            value={@habit.name}
+            phx-blur="rename_habit"
+            phx-value-id={@habit.id}
+            class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
+          />
+        </div>
         
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap">
             <!-- Current streak badge -->
             <.badge
               variant={if(@streaks.current_streak > 0, do: "success", else: "neutral")}
@@ -248,7 +269,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       </div>
       
     <!-- Grid container -->
-      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4">
+      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
@@ -343,10 +364,10 @@ defmodule StreaksWeb.HabitsLive.Index do
     <div
       id={"habit-cube-#{@habit_id}-#{Date.to_iso8601(@date)}"}
       class={[
-        "w-3.5 h-3.5 rounded-md border-2 transition-all duration-200 relative group",
+        "w-3.5 h-3.5 rounded-sm border-2 transition-colors duration-200 relative group",
         if(@is_future,
           do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
-          else: "cursor-pointer transform hover:scale-125"
+          else: "cursor-pointer hover:opacity-80"
         ),
         if(!@is_future && @completed, do: @completed_classes, else: nil),
         if(!@is_future && !@completed,
@@ -355,7 +376,7 @@ defmodule StreaksWeb.HabitsLive.Index do
           else: nil
         ),
         if(@is_today,
-          do: "ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-1 dark:ring-offset-gray-900",
+          do: "ring-2 ring-green-500 dark:ring-green-400 ring-offset-1 dark:ring-offset-gray-900",
           else: nil
         )
       ]}

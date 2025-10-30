@@ -409,4 +409,99 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       assert html =~ "cursor-not-allowed"
     end
   end
+
+  describe "reorder habits" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      habit1 = habit_fixture(user, %{name: "First Habit"})
+      habit2 = habit_fixture(user, %{name: "Second Habit"})
+      habit3 = habit_fixture(user, %{name: "Third Habit"})
+      %{conn: log_in_user(conn, user), user: user, habit1: habit1, habit2: habit2, habit3: habit3}
+    end
+
+    test "reorders habits successfully", %{
+      conn: conn,
+      user: user,
+      habit1: habit1,
+      habit2: habit2,
+      habit3: habit3
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element("#habits-list")
+      |> render_hook("reorder", %{"ids" => ["#{habit3.id}", "#{habit1.id}", "#{habit2.id}"]})
+
+      habits = Habits.list_habits(user)
+      assert Enum.map(habits, & &1.id) == [habit3.id, habit1.id, habit2.id]
+      assert Enum.at(habits, 0).position == 1
+      assert Enum.at(habits, 1).position == 2
+      assert Enum.at(habits, 2).position == 3
+    end
+
+    test "reordered habits persist on reload", %{
+      conn: conn,
+      user: user,
+      habit1: habit1,
+      habit2: habit2,
+      habit3: habit3
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element("#habits-list")
+      |> render_hook("reorder", %{"ids" => ["#{habit2.id}", "#{habit3.id}", "#{habit1.id}"]})
+
+      {:ok, _new_lv, _html} = live(conn, ~p"/streaks")
+
+      habits = Habits.list_habits(user)
+      assert Enum.map(habits, & &1.id) == [habit2.id, habit3.id, habit1.id]
+    end
+
+    test "rejects reordering with invalid habit IDs", %{
+      conn: conn,
+      user: user,
+      habit1: habit1,
+      habit2: habit2,
+      habit3: habit3
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      original_order = [habit1.id, habit2.id, habit3.id]
+
+      lv
+      |> element("#habits-list")
+      |> render_hook("reorder", %{"ids" => ["99999", "88888"]})
+
+      habits = Habits.list_habits(user)
+      assert length(habits) == 3
+      assert Enum.map(habits, & &1.id) == original_order
+    end
+
+    test "only reorders user's own habits", %{
+      conn: conn,
+      user: user,
+      habit1: habit1,
+      habit2: habit2,
+      habit3: habit3
+    } do
+      other_user = user_fixture()
+      other_habit = habit_fixture(other_user, %{name: "Other User Habit"})
+
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      original_order = [habit1.id, habit2.id, habit3.id]
+
+      lv
+      |> element("#habits-list")
+      |> render_hook("reorder", %{"ids" => ["#{habit1.id}", "#{other_habit.id}"]})
+
+      habits = Habits.list_habits(user)
+      assert length(habits) == 3
+      assert Enum.map(habits, & &1.id) == original_order
+
+      other_habits = Habits.list_habits(other_user)
+      assert hd(other_habits).id == other_habit.id
+    end
+  end
 end

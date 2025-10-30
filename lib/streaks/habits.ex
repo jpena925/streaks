@@ -21,12 +21,12 @@ defmodule Streaks.Habits do
   end
 
   @doc """
-  Returns the list of habits for a user.
+  Returns the list of habits for a user, ordered by position.
   """
   def list_habits(%User{id: user_id}) do
     Habit
     |> where([h], h.user_id == ^user_id and is_nil(h.archived_at))
-    |> order_by([h], asc: h.inserted_at)
+    |> order_by([h], asc: h.position)
     |> preload(:completions)
     |> Repo.all()
   end
@@ -55,8 +55,12 @@ defmodule Streaks.Habits do
 
   @doc """
   Creates a habit.
+  Automatically sets position to the end of the user's habit list.
   """
-  def create_habit(%User{id: user_id}, attrs \\ %{}) do
+  def create_habit(%User{id: user_id} = _user, attrs \\ %{}) do
+    position = get_next_position(user_id)
+    attrs = Map.put(attrs, :position, position)
+
     %Habit{user_id: user_id}
     |> Habit.changeset(attrs)
     |> Repo.insert()
@@ -90,6 +94,41 @@ defmodule Streaks.Habits do
   """
   def change_habit(%Habit{} = habit, attrs \\ %{}) do
     Habit.changeset(habit, attrs)
+  end
+
+  @doc """
+  Reorders habits based on a list of habit IDs in the desired order.
+  Verifies all habits belong to the user for security.
+  """
+  def reorder_habits(%User{id: user_id}, habit_ids) when is_list(habit_ids) do
+    habits =
+      Habit
+      |> where([h], h.id in ^habit_ids and h.user_id == ^user_id and is_nil(h.archived_at))
+      |> Repo.all()
+
+    if length(habits) != length(habit_ids) do
+      {:error, :invalid_habits}
+    else
+      Enum.reduce_while(Enum.with_index(habit_ids, 1), {:ok, []}, fn {habit_id, position},
+                                                                     {:ok, _acc} ->
+        habit = Enum.find(habits, &(&1.id == habit_id))
+
+        case update_habit(habit, %{position: position}) do
+          {:ok, updated_habit} -> {:cont, {:ok, [updated_habit]}}
+          {:error, changeset} -> {:halt, {:error, changeset}}
+        end
+      end)
+    end
+  end
+
+  defp get_next_position(user_id) do
+    max_position =
+      Habit
+      |> where([h], h.user_id == ^user_id and is_nil(h.archived_at))
+      |> select([h], max(h.position))
+      |> Repo.one()
+
+    if max_position, do: max_position + 1, else: 1
   end
 
   @doc """

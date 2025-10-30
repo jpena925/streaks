@@ -27,10 +27,10 @@ Current `index.ex` is 399 lines. Break it into:
 
 ### 4. Habit Reordering
 
-- [ ] Add drag handle icon (⋮⋮) to habit card
-- [ ] Add `position` field to habits table
-- [ ] Implement drag-and-drop
-- [ ] Save new order
+- [x] Add drag handle icon (⋮⋮) to habit card
+- [x] Add `position` field to habits table
+- [x] Implement drag-and-drop
+- [x] Save new order
 
 ### 5. Use Streams (maybe)
 

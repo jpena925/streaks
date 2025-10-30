@@ -172,6 +172,19 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  def handle_event("reorder", %{"ids" => ids}, socket) do
+    habit_ids = Enum.map(ids, &String.to_integer/1)
+
+    case Habits.reorder_habits(socket.assigns.current_scope.user, habit_ids) do
+      {:ok, _habits} ->
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+        {:noreply, assign(socket, :habits, habits)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+    end
+  end
+
   defp get_completion_dates(habit) do
     habit.completions
     |> Enum.map(& &1.completed_on)
@@ -211,7 +224,10 @@ defmodule StreaksWeb.HabitsLive.Index do
       <div class="mb-4">
         <!-- Drag handle and editable habit name -->
         <div class="flex items-center gap-2 mb-2">
-          <button class="text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing">
+          <button
+            class="drag-handle text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing"
+            title="Drag to reorder"
+          >
             <.icon name="hero-bars-3" class="w-4 h-4" />
           </button>
           <input

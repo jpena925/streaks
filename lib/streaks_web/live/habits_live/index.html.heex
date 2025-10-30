@@ -88,13 +88,22 @@
     </div>
     
 <!-- Habits List -->
-    <div class="space-y-6">
-      <.habit_component
+    <div
+      id="habits-list"
+      phx-hook="Sortable"
+      data-handle=".drag-handle"
+      class="space-y-6"
+    >
+      <div
         :for={habit <- @habits}
-        habit={habit}
-        current_user={@current_scope.user}
-        timezone={@timezone}
-      />
+        data-id={habit.id}
+      >
+        <.habit_component
+          habit={habit}
+          current_user={@current_scope.user}
+          timezone={@timezone}
+        />
+      </div>
     </div>
     
 <!-- Quantity Input Modal -->

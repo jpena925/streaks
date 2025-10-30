@@ -59,8 +59,11 @@ jobs:
 
       - name: Deploy to Gigalixir
         env:
-          GIGALIXIR_API_KEY: ${{ secrets.GIGALIXIR_API_KEY }}
+          GIGALIXIR_EMAIL: ${{ secrets.GIGALIXIR_EMAIL }}
+          GIGALIXIR_PASSWORD: ${{ secrets.GIGALIXIR_PASSWORD }}
           GIGALIXIR_APP_NAME: ${{ secrets.GIGALIXIR_APP_NAME }}
         run: |
-          git remote add gigalixir https://$GIGALIXIR_API_KEY@git.gigalixir.com/$GIGALIXIR_APP_NAME.git
-          git push gigalixir HEAD:refs/heads/main -f
+          pip3 install gigalixir --upgrade
+          gigalixir login --email="$GIGALIXIR_EMAIL" --password="$GIGALIXIR_PASSWORD" --yes
+          gigalixir git:remote $GIGALIXIR_APP_NAME
+          git push gigalixir HEAD:refs/heads/main --force

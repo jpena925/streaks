@@ -18,7 +18,7 @@ defmodule StreaksWeb.HabitsLive.QuantityModal do
         phx-click="close_quantity_modal"
       >
       </div>
-
+      
     <!-- Modal -->
       <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 max-w-md w-full p-6">

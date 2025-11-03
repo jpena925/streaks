@@ -14,10 +14,10 @@
 
 Current `index.ex` is 399 lines. Break it into:
 
-- [ ] Extract `habit_component` → `components/habit_card.ex`
-- [ ] Extract `habit_cube` → `components/habit_cube.ex`
-- [ ] Extract quantity modal → `components/quantity_modal.ex`
-- [ ] Main `index.ex` should just be orchestration
+- [x] Extract `habit_component` → `components/habit_card.ex`
+- [x] Extract `habit_cube` → `components/habit_cube.ex`
+- [x] Extract quantity modal → `components/quantity_modal.ex`
+- [x] Main `index.ex` should just be orchestration
 
 ### 3. Edit Quantities
 

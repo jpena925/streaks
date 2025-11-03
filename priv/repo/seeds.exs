@@ -61,6 +61,7 @@ workout_habit =
   Repo.insert!(%Habit{
     name: "Workout",
     has_quantity: false,
+    position: 0,
     user_id: user.id,
     inserted_at: habit_created_at,
     updated_at: habit_created_at
@@ -70,6 +71,7 @@ drinks_habit =
   Repo.insert!(%Habit{
     name: "Drinks",
     has_quantity: true,
+    position: 1,
     user_id: user.id,
     inserted_at: habit_created_at,
     updated_at: habit_created_at

@@ -48,6 +48,4 @@ Instead of reassigning full habits list every time:
 - Better mobile grid experience
 - Quantity input validation
 
----
 
-**Next step:** Pick one thing and start. Probably design cleanup or split the LiveView.

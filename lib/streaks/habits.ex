@@ -153,7 +153,10 @@ defmodule Streaks.Habits do
 
     %HabitCompletion{habit_id: habit_id}
     |> HabitCompletion.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(
+      on_conflict: {:replace, [:quantity, :updated_at]},
+      conflict_target: [:habit_id, :completed_on]
+    )
   end
 
   @doc """
@@ -176,6 +179,23 @@ defmodule Streaks.Habits do
     |> Repo.delete_all()
 
     :ok
+  end
+
+  @doc """
+  Gets a single completion for a habit on a specific date.
+  Returns nil if not found.
+  """
+  def get_completion(%Habit{} = habit, date) when is_binary(date) do
+    case Date.from_iso8601(date) do
+      {:ok, parsed_date} -> get_completion(habit, parsed_date)
+      {:error, _} -> nil
+    end
+  end
+
+  def get_completion(%Habit{id: habit_id}, %Date{} = date) do
+    HabitCompletion
+    |> where([hc], hc.habit_id == ^habit_id and hc.completed_on == ^date)
+    |> Repo.one()
   end
 
   @doc """

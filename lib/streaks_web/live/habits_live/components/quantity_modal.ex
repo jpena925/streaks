@@ -3,6 +3,7 @@ defmodule StreaksWeb.HabitsLive.QuantityModal do
 
   attr :show, :boolean, required: true
   attr :quantity_value, :string, default: ""
+  attr :is_edit_mode, :boolean, default: false
 
   def quantity_modal(assigns) do
     ~H"""
@@ -18,12 +19,12 @@ defmodule StreaksWeb.HabitsLive.QuantityModal do
         phx-click="close_quantity_modal"
       >
       </div>
-      
+
     <!-- Modal -->
       <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Enter Quantity
+            {if @is_edit_mode, do: "Edit Quantity", else: "Enter Quantity"}
           </h3>
 
           <form phx-submit="submit_quantity" class="space-y-4">
@@ -54,6 +55,17 @@ defmodule StreaksWeb.HabitsLive.QuantityModal do
                 class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded transition-colors duration-200"
               >
                 Cancel
+              </button>
+            </div>
+
+            <div :if={@is_edit_mode} class="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <button
+                type="button"
+                phx-click="delete_quantity"
+                data-confirm="Are you sure you want to remove this completion?"
+                class="w-full bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 font-semibold px-6 py-3 rounded transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                <.icon name="hero-trash" class="w-5 h-5" /> Delete Completion
               </button>
             </div>
           </form>

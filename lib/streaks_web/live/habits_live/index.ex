@@ -14,6 +14,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_habit_id, nil)
       |> assign(:quantity_date, nil)
       |> assign(:quantity_value, "")
+      |> assign(:is_edit_mode, false)
       |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
 
     socket =
@@ -115,7 +116,8 @@ defmodule StreaksWeb.HabitsLive.Index do
          |> assign(:show_quantity_modal, true)
          |> assign(:quantity_habit_id, habit_id)
          |> assign(:quantity_date, date)
-         |> assign(:quantity_value, "")}
+         |> assign(:quantity_value, "")
+         |> assign(:is_edit_mode, false)}
       else
         case Habits.log_habit_completion(habit, date) do
           {:ok, _completion} ->
@@ -128,6 +130,26 @@ defmodule StreaksWeb.HabitsLive.Index do
       end
     else
       :error -> {:noreply, habit_not_found(socket)}
+    end
+  end
+
+  def handle_event("edit_quantity", %{"habit_id" => habit_id, "date" => date}, socket) do
+    with {:ok, habit} <- fetch_user_habit(habit_id, socket),
+         completion <- Habits.get_completion(habit, date),
+         true <- completion != nil do
+      {:noreply,
+       socket
+       |> assign(:show_quantity_modal, true)
+       |> assign(:quantity_habit_id, habit_id)
+       |> assign(:quantity_date, date)
+       |> assign(:quantity_value, to_string(completion.quantity))
+       |> assign(:is_edit_mode, true)}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Completion not found")}
     end
   end
 
@@ -147,7 +169,8 @@ defmodule StreaksWeb.HabitsLive.Index do
      |> assign(:show_quantity_modal, false)
      |> assign(:quantity_habit_id, nil)
      |> assign(:quantity_date, nil)
-     |> assign(:quantity_value, "")}
+     |> assign(:quantity_value, "")
+     |> assign(:is_edit_mode, false)}
   end
 
   def handle_event("submit_quantity", %{"quantity" => quantity_str}, socket) do
@@ -164,13 +187,34 @@ defmodule StreaksWeb.HabitsLive.Index do
        |> assign(:show_quantity_modal, false)
        |> assign(:quantity_habit_id, nil)
        |> assign(:quantity_date, nil)
-       |> assign(:quantity_value, "")}
+       |> assign(:quantity_value, "")
+       |> assign(:is_edit_mode, false)}
     else
       :error ->
         {:noreply, habit_not_found(socket)}
 
       _ ->
         {:noreply, put_flash(socket, :error, "Please enter a valid positive number")}
+    end
+  end
+
+  def handle_event("delete_quantity", _params, socket) do
+    with {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket) do
+      :ok = Habits.unlog_habit_completion(habit, socket.assigns.quantity_date)
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
+
+      {:noreply,
+       socket
+       |> assign(:habits, habits)
+       |> assign(:show_quantity_modal, false)
+       |> assign(:quantity_habit_id, nil)
+       |> assign(:quantity_date, nil)
+       |> assign(:quantity_value, "")
+       |> assign(:is_edit_mode, false)
+       |> put_flash(:info, "Completion deleted successfully")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
     end
   end
 

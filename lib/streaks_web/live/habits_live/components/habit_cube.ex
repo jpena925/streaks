@@ -7,6 +7,7 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   attr :habit_id, :integer, required: true
   attr :is_today, :boolean, default: false
   attr :is_future, :boolean, default: false
+  attr :has_quantity, :boolean, default: false
 
   def habit_cube(assigns) do
     title = Date.to_iso8601(assigns.date)
@@ -57,7 +58,14 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
         )
       ]}
       title={if(@quantity && @completed, do: nil, else: @title)}
-      phx-click={if(!@is_future, do: if(@completed, do: "unlog_day", else: "log_day"), else: nil)}
+      phx-click={
+        cond do
+          @is_future -> nil
+          @completed && @has_quantity -> "edit_quantity"
+          @completed -> "unlog_day"
+          true -> "log_day"
+        end
+      }
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
       phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}

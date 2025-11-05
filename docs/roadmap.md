@@ -21,9 +21,9 @@ Current `index.ex` is 399 lines. Break it into:
 
 ### 3. Edit Quantities
 
-- [ ] Click completed box → show modal
-- [ ] Modal shows: current value, edit input, Remove button
-- [ ] Can update or delete the completion
+- [x] Click completed box → show modal
+- [x] Modal shows: current value, edit input, Remove button
+- [x] Can update or delete the completion
 
 ### 4. Habit Reordering
 

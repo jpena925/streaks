@@ -32,14 +32,6 @@ Current `index.ex` is 399 lines. Break it into:
 - [x] Implement drag-and-drop
 - [x] Save new order
 
-### 5. Use Streams (maybe)
-
-Instead of reassigning full habits list every time:
-
-- [ ] Convert to `stream(:habits, habits)`
-- [ ] Use `stream_insert` and `stream_delete` for updates
-- [ ] Should be faster with many habits
-
 ### 6. Other Stuff (later)
 
 - Archive habits (field exists, no UI yet)

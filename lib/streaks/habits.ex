@@ -25,16 +25,10 @@ defmodule Streaks.Habits do
   Only preloads completions from the last 365 days for performance.
   """
   def list_habits(%User{id: user_id}) do
-    cutoff_date = Date.add(Date.utc_today(), -365)
-
-    recent_completions =
-      from c in HabitCompletion,
-        where: c.completed_on >= ^cutoff_date
-
     Habit
     |> where([h], h.user_id == ^user_id and is_nil(h.archived_at))
     |> order_by([h], asc: h.position)
-    |> preload(completions: ^recent_completions)
+    |> preload(completions: ^recent_completions_query())
     |> Repo.all()
   end
 
@@ -44,15 +38,9 @@ defmodule Streaks.Habits do
   Only preloads completions from the last 365 days for performance.
   """
   def get_habit(id, %User{id: user_id}) do
-    cutoff_date = Date.add(Date.utc_today(), -365)
-
-    recent_completions =
-      from c in HabitCompletion,
-        where: c.completed_on >= ^cutoff_date
-
     Habit
     |> where([h], h.id == ^id and h.user_id == ^user_id)
-    |> preload(completions: ^recent_completions)
+    |> preload(completions: ^recent_completions_query())
     |> Repo.one()
   end
 
@@ -62,15 +50,9 @@ defmodule Streaks.Habits do
   Only preloads completions from the last 365 days for performance.
   """
   def get_habit!(id, %User{id: user_id}) do
-    cutoff_date = Date.add(Date.utc_today(), -365)
-
-    recent_completions =
-      from c in HabitCompletion,
-        where: c.completed_on >= ^cutoff_date
-
     Habit
     |> where([h], h.id == ^id and h.user_id == ^user_id)
-    |> preload(completions: ^recent_completions)
+    |> preload(completions: ^recent_completions_query())
     |> Repo.one!()
   end
 
@@ -140,6 +122,13 @@ defmodule Streaks.Habits do
         end
       end)
     end
+  end
+
+  defp recent_completions_query(days_back \\ 365) do
+    cutoff_date = Date.add(Date.utc_today(), -days_back)
+
+    from c in HabitCompletion,
+      where: c.completed_on >= ^cutoff_date
   end
 
   defp get_next_position(user_id) do

@@ -18,6 +18,7 @@ defmodule Streaks.Habits.HabitCompletion do
     habit_completion
     |> cast(attrs, [:completed_on, :quantity])
     |> validate_required([:completed_on])
+    |> validate_number(:quantity, greater_than: 0)
     |> unique_constraint([:habit_id, :completed_on],
       message: "Habit already completed on this date"
     )

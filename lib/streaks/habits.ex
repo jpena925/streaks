@@ -101,7 +101,6 @@ defmodule Streaks.Habits do
 
   @doc """
   Reorders habits based on a list of habit IDs in the desired order.
-  Verifies all habits belong to the user for security.
   """
   def reorder_habits(%User{id: user_id}, habit_ids) when is_list(habit_ids) do
     habits =
@@ -112,14 +111,17 @@ defmodule Streaks.Habits do
     if length(habits) != length(habit_ids) do
       {:error, :invalid_habits}
     else
-      Enum.reduce_while(Enum.with_index(habit_ids, 1), {:ok, []}, fn {habit_id, position},
-                                                                     {:ok, _acc} ->
-        habit = Enum.find(habits, &(&1.id == habit_id))
+      Repo.transaction(fn ->
+        now = DateTime.utc_now()
 
-        case update_habit(habit, %{position: position}) do
-          {:ok, updated_habit} -> {:cont, {:ok, [updated_habit]}}
-          {:error, changeset} -> {:halt, {:error, changeset}}
-        end
+        habit_ids
+        |> Enum.with_index(1)
+        |> Enum.each(fn {habit_id, position} ->
+          from(h in Habit, where: h.id == ^habit_id)
+          |> Repo.update_all(set: [position: position, updated_at: now])
+        end)
+
+        list_habits(%User{id: user_id})
       end)
     end
   end

@@ -11,12 +11,20 @@ defmodule Streaks.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader],
+      listeners: listeners(),
       dialyzer: [
         plt_add_apps: [:ex_unit, :mix],
         check_plt: true
       ]
     ]
+  end
+
+  defp listeners() do
+    if System.get_env("DEPENDABOT_HOME") do
+      []
+    else
+      [Phoenix.CodeReloader]
+    end
   end
 
   # Configuration for the OTP application.

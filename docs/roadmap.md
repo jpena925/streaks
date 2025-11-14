@@ -62,43 +62,6 @@ These improve code quality, maintainability, and user experience.
   - handles year boundaries
 ```
 
----
-
-### 5. Add Typespecs (Dialyzer Support)
-
-**Why:** Better documentation, catch type errors at compile time. You already have Dialyzer installed!
-
-**Files to modify:**
-
-- `lib/streaks/habits.ex`
-- `lib/streaks/habits/habit.ex`
-- `lib/streaks/habits/habit_completion.ex`
-- `lib/streaks_web/live/habits_live/index.ex`
-
-**Example for Habits context:**
-
-```elixir
-@spec list_habits(User.t()) :: [Habit.t()]
-@spec get_habit(integer(), User.t()) :: Habit.t() | nil
-@spec get_habit!(integer(), User.t()) :: Habit.t()
-@spec create_habit(User.t(), map()) :: {:ok, Habit.t()} | {:error, Ecto.Changeset.t()}
-@spec update_habit(Habit.t(), map()) :: {:ok, Habit.t()} | {:error, Ecto.Changeset.t()}
-@spec delete_habit(Habit.t()) :: {:ok, Habit.t()} | {:error, Ecto.Changeset.t()}
-@spec archive_habit(Habit.t()) :: {:ok, Habit.t()} | {:error, Ecto.Changeset.t()}
-@spec reorder_habits(User.t(), [integer()]) :: {:ok, [Habit.t()]} | {:error, term()}
-@spec log_habit_completion(Habit.t() | integer(), Date.t() | String.t(), integer() | nil) ::
-  {:ok, HabitCompletion.t()} | {:error, term()}
-@spec calculate_streaks(Habit.t(), String.t()) :: %{
-  current_streak: non_neg_integer(),
-  longest_streak: non_neg_integer()
-}
-@spec today(String.t()) :: Date.t()
-```
-
-**Run:** `mix dialyzer` after adding specs.
-
----
-
 ### 6. Improve Error Messages
 
 **Why:** Users get generic error messages. Should be more specific.

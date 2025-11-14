@@ -5,6 +5,19 @@ defmodule Streaks.Habits.Habit do
   alias Streaks.Accounts.User
   alias Streaks.Habits.HabitCompletion
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          name: String.t() | nil,
+          has_quantity: boolean(),
+          archived_at: DateTime.t() | nil,
+          position: integer() | nil,
+          user_id: integer() | nil,
+          user: User.t() | Ecto.Association.NotLoaded.t(),
+          completions: [HabitCompletion.t()] | Ecto.Association.NotLoaded.t(),
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "habits" do
     field :name, :string
     field :has_quantity, :boolean, default: false
@@ -17,7 +30,7 @@ defmodule Streaks.Habits.Habit do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(habit, attrs) do
     habit
     |> cast(attrs, [:name, :has_quantity, :archived_at, :position])

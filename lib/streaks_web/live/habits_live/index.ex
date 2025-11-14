@@ -231,6 +231,7 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  @spec reset_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   defp reset_new_habit_form(socket) do
     socket
     |> assign(:show_new_habit_form, false)
@@ -238,6 +239,8 @@ defmodule StreaksWeb.HabitsLive.Index do
     |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
   end
 
+  @spec fetch_user_habit(integer() | String.t(), Phoenix.LiveView.Socket.t()) ::
+          {:ok, Streaks.Habits.Habit.t()} | :error
   defp fetch_user_habit(habit_id, socket) when is_binary(habit_id) do
     fetch_user_habit(String.to_integer(habit_id), socket)
   end
@@ -249,6 +252,7 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  @spec habit_not_found(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   defp habit_not_found(socket) do
     habits = Habits.list_habits(socket.assigns.current_scope.user)
 

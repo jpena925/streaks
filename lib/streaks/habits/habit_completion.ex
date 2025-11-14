@@ -4,6 +4,16 @@ defmodule Streaks.Habits.HabitCompletion do
 
   alias Streaks.Habits.Habit
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          completed_on: Date.t() | nil,
+          quantity: integer() | nil,
+          habit_id: integer() | nil,
+          habit: Habit.t() | Ecto.Association.NotLoaded.t(),
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "habit_completions" do
     field :completed_on, :date
     field :quantity, :integer
@@ -13,7 +23,7 @@ defmodule Streaks.Habits.HabitCompletion do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(habit_completion, attrs) do
     habit_completion
     |> cast(attrs, [:completed_on, :quantity])

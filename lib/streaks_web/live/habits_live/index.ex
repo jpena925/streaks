@@ -2,6 +2,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   use StreaksWeb, :live_view
 
   alias Streaks.Habits
+  alias Streaks.Habits.Habit
   alias StreaksWeb.HabitsLive.HabitCard
   alias StreaksWeb.HabitsLive.QuantityModal
 
@@ -15,7 +16,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_date, nil)
       |> assign(:quantity_value, "")
       |> assign(:is_edit_mode, false)
-      |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
+      |> assign_new_habit_form()
 
     socket =
       if connected?(socket) do
@@ -47,7 +48,12 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("validate", %{"habit" => habit_params}, socket) do
-    form = to_form(habit_params, as: :habit)
+    changeset =
+      %Habit{user_id: socket.assigns.current_scope.user.id}
+      |> Habit.changeset(habit_params)
+      |> Map.put(:action, :validate)
+
+    form = to_form(changeset)
     {:noreply, assign(socket, :form, form)}
   end
 
@@ -236,7 +242,13 @@ defmodule StreaksWeb.HabitsLive.Index do
     socket
     |> assign(:show_new_habit_form, false)
     |> assign(:new_habit_name, "")
-    |> assign(:form, to_form(%{"name" => "", "has_quantity" => false}, as: :habit))
+    |> assign_new_habit_form()
+  end
+
+  @spec assign_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
+  defp assign_new_habit_form(socket) do
+    changeset = Habit.changeset(%Habit{}, %{})
+    assign(socket, :form, to_form(changeset, as: :habit))
   end
 
   @spec fetch_user_habit(integer() | String.t(), Phoenix.LiveView.Socket.t()) ::

@@ -84,6 +84,40 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       html = lv |> element("button[phx-click='hide_new_habit_form']") |> render_click()
       refute html =~ "Create New Habit"
     end
+
+    test "shows validation errors in real-time", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv |> element("button", "Add Habit") |> render_click()
+
+      # Try to submit empty name
+      html =
+        lv
+        |> form("form[phx-submit='create_habit']", %{
+          "habit" => %{"name" => "", "has_quantity" => "false"}
+        })
+        |> render_change()
+
+      assert html =~ "can&#39;t be blank"
+    end
+
+    test "shows validation error for name that's too long", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv |> element("button", "Add Habit") |> render_click()
+
+      # Try to submit name that's too long (over 100 characters)
+      long_name = String.duplicate("a", 101)
+
+      html =
+        lv
+        |> form("form[phx-submit='create_habit']", %{
+          "habit" => %{"name" => long_name, "has_quantity" => "false"}
+        })
+        |> render_change()
+
+      assert html =~ "should be at most 100 character"
+    end
   end
 
   describe "create habit" do

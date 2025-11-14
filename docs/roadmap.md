@@ -62,39 +62,6 @@ These improve code quality, maintainability, and user experience.
   - handles year boundaries
 ```
 
-### 6. Improve Error Messages
-
-**Why:** Users get generic error messages. Should be more specific.
-
-**Files to modify:**
-
-- `lib/streaks_web/live/habits_live/index.ex`
-
-**Pattern to use:**
-
-```elixir
-def handle_event("create_habit", %{"habit" => habit_params}, socket) do
-  case Habits.create_habit(socket.assigns.current_scope.user, attrs) do
-    {:ok, _habit} ->
-      # ... success
-
-    {:error, changeset} ->
-      error_msg = format_changeset_errors(changeset)
-      {:noreply, put_flash(socket, :error, "Error creating habit: #{error_msg}")}
-  end
-end
-
-defp format_changeset_errors(changeset) do
-  changeset.errors
-  |> Enum.map(fn {field, {msg, _}} -> "#{field} #{msg}" end)
-  |> Enum.join(", ")
-end
-```
-
-Apply to all error handling patterns in the LiveView.
-
----
-
 ### 7. Implement Archive Habit Feature
 
 **Why:** Field exists in DB and schema, but no UI for it. Users may want to hide habits without deleting them.
@@ -128,33 +95,6 @@ Add an "Archive" button or dropdown menu to habit card with Archive/Delete optio
 
 **Future enhancement:**
 Add a "Show Archived" toggle and `unarchive_habit/1` function.
-
----
-
-### 8. Add Form Validation Feedback
-
-**Why:** Users don't see validation errors in real-time on the new habit form.
-
-**Files to modify:**
-
-- `lib/streaks_web/live/habits_live/index.ex`
-- `lib/streaks_web/live/habits_live/index.html.heex`
-
-**LiveView changes:**
-
-```elixir
-def handle_event("validate", %{"habit" => habit_params}, socket) do
-  changeset =
-    %Habit{user_id: socket.assigns.current_scope.user.id}
-    |> Habit.changeset(habit_params)
-    |> Map.put(:action, :validate)
-
-  form = to_form(changeset)
-  {:noreply, assign(socket, :form, form)}
-end
-```
-
-The `<.input>` component should already show errors if the form changeset has them.
 
 ---
 

@@ -267,39 +267,6 @@ Or use a spinner component.
 
 ---
 
-### 14. Add Keyboard Shortcuts
-
-**Why:** Power users appreciate keyboard navigation.
-
-**Shortcuts to add:**
-
-- `n` - New habit
-- `Escape` - Close modal/form
-- `?` - Show help modal with shortcuts
-
-**Implementation:**
-Add a new JS hook for keyboard shortcuts or use LiveView's `phx-window-keydown`.
-
-**Example:**
-
-```heex
-<div phx-window-keydown="handle_keydown">
-  <!-- content -->
-</div>
-```
-
-```elixir
-def handle_event("handle_keydown", %{"key" => "n"}, socket) do
-  {:noreply, assign(socket, :show_new_habit_form, true)}
-end
-
-def handle_event("handle_keydown", %{"key" => "Escape"}, socket) do
-  {:noreply, reset_new_habit_form(socket)}
-end
-```
-
----
-
 ### 15. Add Documentation to Complex Functions
 
 **Why:** Functions like `calculate_current_streak` and `group_days_by_month` have complex logic.
@@ -331,45 +298,6 @@ The streak counts consecutive days backward from the most recent completion.
 ## 🔵 Low Priority (Future Enhancements)
 
 These are nice-to-haves that can wait until the app scales or you have more time.
-
-### 16. Add Telemetry Events
-
-**Why:** Better observability and debugging in production.
-
-**Files to modify:**
-
-- `lib/streaks/habits.ex`
-
-**Pattern:**
-
-```elixir
-def log_habit_completion(habit_id, date, quantity) do
-  :telemetry.span(
-    [:streaks, :habits, :log_completion],
-    %{habit_id: habit_id},
-    fn ->
-      result = # ... your logic
-      {result, %{has_quantity: quantity != nil}}
-    end
-  )
-end
-```
-
-**Add handlers in application.ex:**
-
-```elixir
-:telemetry.attach_many(
-  "streaks-telemetry",
-  [
-    [:streaks, :habits, :log_completion, :start],
-    [:streaks, :habits, :log_completion, :stop]
-  ],
-  &StreaksWeb.Telemetry.handle_event/4,
-  nil
-)
-```
-
----
 
 ### 17. Add Background Job for Data Cleanup
 
@@ -423,29 +351,6 @@ end
 
 ---
 
-### 19. Add Export Feature
-
-**Why:** Users might want to export their data (CSV, JSON).
-
-**Endpoint:**
-
-```elixir
-def handle_event("export_data", _params, socket) do
-  user = socket.assigns.current_scope.user
-  habits = Habits.list_habits(user)
-
-  csv_data = generate_csv(habits)
-
-  {:noreply,
-   socket
-   |> push_event("download", %{
-     filename: "streaks_export_#{Date.utc_today()}.csv",
-     data: csv_data
-   })}
-end
-```
-
----
 
 ### 20. Add Mobile App (React Native / Flutter)
 
@@ -491,50 +396,4 @@ end
 - Oban for scheduling
 - Web Push API for browser notifications
 - Swoosh/Resend for emails (already have)
-
----
-
-## Summary Checklist
-
-### Critical (Do First)
-
-- [ ] Add database indexes
-- [ ] Optimize reorder_habits batch updates
-
-### High Priority (Do Soon)
-
-- [ ] Add typespecs for Dialyzer
-- [ ] Improve error messages
-- [ ] Implement archive habit UI
-- [ ] Add form validation feedback
-
-### Medium Priority (Nice to Have)
-
-- [ ] Extract magic numbers to constants
-- [ ] Add Credo for code quality
-- [ ] Optimize streak calculation caching
-- [ ] Add loading states
-- [ ] Extract calendar logic to module
-- [ ] Add keyboard shortcuts
-- [ ] Add documentation to complex functions
-
-### Low Priority (Future)
-
-- [ ] Add telemetry events
-- [ ] Add background job for cleanup
-- [ ] Add habit categories/tags
-- [ ] Add export feature
-- [ ] Add mobile app
-- [ ] Add social features
-- [ ] Add reminders/notifications
-
----
-
-## Suggested Order of Execution
-
-1. **Week 1:** Critical items (#1-3)
-2. **Week 2:** High priority testing and types (#4-5)
-3. **Week 3:** High priority UX improvements (#6-8)
-4. **Week 4:** Medium priority quality improvements (#9-11)
-5. **Ongoing:** Low priority as needed
 

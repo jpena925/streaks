@@ -9,6 +9,10 @@ defmodule Streaks.Habits do
   alias Streaks.Habits.{Habit, HabitCompletion}
   alias Streaks.Accounts.User
 
+  @default_days_back 365
+  @max_weeks_display 52
+  @min_month_spacing_columns 4
+
   @doc """
   Gets today's date in the specified timezone.
   Defaults to UTC if timezone is invalid.
@@ -137,7 +141,7 @@ defmodule Streaks.Habits do
   end
 
   @spec recent_completions_query(integer()) :: Ecto.Query.t()
-  defp recent_completions_query(days_back \\ 365) do
+  defp recent_completions_query(days_back \\ @default_days_back) do
     cutoff_date = Date.add(Date.utc_today(), -days_back)
 
     from c in HabitCompletion,
@@ -261,7 +265,6 @@ defmodule Streaks.Habits do
       when is_list(completion_dates) do
     todays_date = today(timezone)
 
-    # Sort dates in descending order (most recent first)
     sorted_dates = Enum.sort(completion_dates, Date)
 
     current_streak = calculate_current_streak(sorted_dates, todays_date)
@@ -274,7 +277,6 @@ defmodule Streaks.Habits do
   defp calculate_current_streak([], _today), do: 0
 
   defp calculate_current_streak(dates, today) do
-    # Check if habit was completed today or yesterday to start counting
     latest_date = List.last(dates)
     days_since_latest = Date.diff(today, latest_date)
 
@@ -348,7 +350,6 @@ defmodule Streaks.Habits do
     habit_start_date = DateTime.to_date(inserted_at)
 
     # Find the Sunday of the week containing the habit start date
-    # Date.day_of_week returns 1-7 where 1=Monday, 7=Sunday
     habit_day_of_week = Date.day_of_week(habit_start_date)
     days_since_sunday = if habit_day_of_week == 7, do: 0, else: habit_day_of_week
     habit_week_sunday = Date.add(habit_start_date, -days_since_sunday)
@@ -362,9 +363,8 @@ defmodule Streaks.Habits do
     days_since_habit_start = Date.diff(current_week_sunday, habit_week_sunday)
     weeks_since_habit_start = div(days_since_habit_start, 7)
 
-    # Show 52 complete weeks (364 days = 52 weeks * 7 days)
     start_sunday =
-      if weeks_since_habit_start >= 52 do
+      if weeks_since_habit_start >= @max_weeks_display do
         # Habit is old enough, show last 52 weeks starting from 52 weeks ago
         Date.add(current_week_sunday, -51 * 7)
       else
@@ -391,14 +391,13 @@ defmodule Streaks.Habits do
       month_key = "#{month_name(date.month)} #{date.year}"
       column_index = div(index, 7)
 
-      # Only add if this is the first occurrence of this month
       if Enum.any?(acc, fn {key, _} -> key == month_key end) do
         acc
       else
         should_add =
           case List.last(acc) do
             nil -> true
-            {_, last_column} -> column_index - last_column >= 4
+            {_, last_column} -> column_index - last_column >= @min_month_spacing_columns
           end
 
         if should_add do

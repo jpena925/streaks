@@ -1,41 +1,6 @@
 # Streaks - AI generated improvement Roadmap
 
 
-### 12. Add Loading States
-
-**Why:** Better UX during async operations.
-
-**Files to modify:**
-
-- `lib/streaks_web/live/habits_live/index.ex`
-- `lib/streaks_web/live/habits_live/index.html.heex`
-
-**Pattern:**
-
-```elixir
-# Add to mount:
-|> assign(:loading, false)
-
-# Wrap expensive operations:
-def handle_event("create_habit", params, socket) do
-  socket = assign(socket, :loading, true)
-  # ... do work ...
-  {:noreply, assign(socket, :loading, false)}
-end
-```
-
-**UI:**
-
-```heex
-<div :if={@loading} class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div class="text-white">Loading...</div>
-</div>
-```
-
-Or use a spinner component.
-
----
-
 ### 13. Extract Complex Calendar Logic
 
 **Why:** The `get_habit_days` and `group_days_by_month` logic is complex. Would be cleaner in its own module.

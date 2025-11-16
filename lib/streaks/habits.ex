@@ -349,30 +349,25 @@ defmodule Streaks.Habits do
     todays_date = today(timezone)
     habit_start_date = DateTime.to_date(inserted_at)
 
-    # Find the Sunday of the week containing the habit start date
     habit_day_of_week = Date.day_of_week(habit_start_date)
     days_since_sunday = if habit_day_of_week == 7, do: 0, else: habit_day_of_week
     habit_week_sunday = Date.add(habit_start_date, -days_since_sunday)
 
-    # Find the Sunday of the current week
     today_day_of_week = Date.day_of_week(todays_date)
     days_since_today_sunday = if today_day_of_week == 7, do: 0, else: today_day_of_week
     current_week_sunday = Date.add(todays_date, -days_since_today_sunday)
 
-    # Calculate weeks between habit start and now
     days_since_habit_start = Date.diff(current_week_sunday, habit_week_sunday)
     weeks_since_habit_start = div(days_since_habit_start, 7)
 
     start_sunday =
       if weeks_since_habit_start >= @max_weeks_display do
-        # Habit is old enough, show last 52 weeks starting from 52 weeks ago
         Date.add(current_week_sunday, -51 * 7)
       else
-        # Habit is newer, show from the Sunday of habit creation week
         habit_week_sunday
       end
 
-    # Generate 52 weeks (364 days) starting from start_sunday
+    # get only the last 365 days
     0..363
     |> Enum.map(&Date.add(start_sunday, &1))
   end

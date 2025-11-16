@@ -1,4 +1,16 @@
 <div class="min-h-screen bg-white dark:bg-black py-6 sm:py-12">
+  <%!-- Loading Overlay --%>
+  <div
+    :if={@loading}
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm"
+  >
+    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-8 flex flex-col items-center gap-4">
+      <div class="w-12 h-12 border-4 border-gray-300 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin">
+      </div>
+      <p class="text-gray-900 dark:text-white text-sm font-medium">Loading...</p>
+    </div>
+  </div>
+
   <div class="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
     <!-- Header -->
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

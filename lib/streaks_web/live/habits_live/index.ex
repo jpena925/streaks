@@ -16,6 +16,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_date, nil)
       |> assign(:quantity_value, "")
       |> assign(:is_edit_mode, false)
+      |> assign(:loading, true)
       |> assign_new_habit_form()
 
     socket =
@@ -26,6 +27,7 @@ defmodule StreaksWeb.HabitsLive.Index do
         socket
         |> assign(:timezone, time_zone)
         |> assign(:habits, habits)
+        |> assign(:loading, false)
       else
         socket
         |> assign(:timezone, "UTC")

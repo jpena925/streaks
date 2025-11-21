@@ -444,7 +444,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     end
   end
 
-  describe "reorder habits" do
+  describe "reorder habits with arrow buttons" do
     setup %{conn: conn} do
       user = user_fixture()
       habit1 = habit_fixture(user, %{name: "First Habit"})
@@ -453,7 +453,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       %{conn: log_in_user(conn, user), user: user, habit1: habit1, habit2: habit2, habit3: habit3}
     end
 
-    test "reorders habits successfully", %{
+    test "moves habit down successfully", %{
       conn: conn,
       user: user,
       habit1: habit1,
@@ -462,15 +462,60 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
+      # Move first habit down
       lv
-      |> element("#habits-list")
-      |> render_hook("reorder", %{"ids" => ["#{habit3.id}", "#{habit1.id}", "#{habit2.id}"]})
+      |> element("button[phx-click='move_habit_down'][phx-value-id='#{habit1.id}']")
+      |> render_click()
 
       habits = Habits.list_habits(user)
-      assert Enum.map(habits, & &1.id) == [habit3.id, habit1.id, habit2.id]
+      assert Enum.map(habits, & &1.id) == [habit2.id, habit1.id, habit3.id]
       assert Enum.at(habits, 0).position == 1
       assert Enum.at(habits, 1).position == 2
       assert Enum.at(habits, 2).position == 3
+    end
+
+    test "moves habit up successfully", %{
+      conn: conn,
+      user: user,
+      habit1: habit1,
+      habit2: habit2,
+      habit3: habit3
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Move third habit up
+      lv
+      |> element("button[phx-click='move_habit_up'][phx-value-id='#{habit3.id}']")
+      |> render_click()
+
+      habits = Habits.list_habits(user)
+      assert Enum.map(habits, & &1.id) == [habit1.id, habit3.id, habit2.id]
+    end
+
+    test "first habit up button is disabled", %{
+      conn: conn,
+      habit1: habit1
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Verify the up button is disabled for the first habit
+      html = render(lv)
+      assert html =~ ~s(phx-click="move_habit_up")
+      assert html =~ ~s(phx-value-id="#{habit1.id}")
+      assert html =~ ~s(disabled)
+    end
+
+    test "last habit down button is disabled", %{
+      conn: conn,
+      habit3: habit3
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Verify the down button is disabled for the last habit
+      html = render(lv)
+      assert html =~ ~s(phx-click="move_habit_down")
+      assert html =~ ~s(phx-value-id="#{habit3.id}")
+      assert html =~ ~s(disabled)
     end
 
     test "reordered habits persist on reload", %{
@@ -482,37 +527,23 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
+      # Move habit1 down, then habit1 down again
       lv
-      |> element("#habits-list")
-      |> render_hook("reorder", %{"ids" => ["#{habit2.id}", "#{habit3.id}", "#{habit1.id}"]})
+      |> element("button[phx-click='move_habit_down'][phx-value-id='#{habit1.id}']")
+      |> render_click()
+
+      lv
+      |> element("button[phx-click='move_habit_down'][phx-value-id='#{habit1.id}']")
+      |> render_click()
 
       {:ok, _new_lv, _html} = live(conn, ~p"/streaks")
 
       habits = Habits.list_habits(user)
+      # habit1 moved down twice: habit2, habit3, habit1
       assert Enum.map(habits, & &1.id) == [habit2.id, habit3.id, habit1.id]
     end
 
-    test "rejects reordering with invalid habit IDs", %{
-      conn: conn,
-      user: user,
-      habit1: habit1,
-      habit2: habit2,
-      habit3: habit3
-    } do
-      {:ok, lv, _html} = live(conn, ~p"/streaks")
-
-      original_order = [habit1.id, habit2.id, habit3.id]
-
-      lv
-      |> element("#habits-list")
-      |> render_hook("reorder", %{"ids" => ["99999", "88888"]})
-
-      habits = Habits.list_habits(user)
-      assert length(habits) == 3
-      assert Enum.map(habits, & &1.id) == original_order
-    end
-
-    test "only reorders user's own habits", %{
+    test "only shows user's own habits", %{
       conn: conn,
       user: user,
       habit1: habit1,
@@ -522,18 +553,18 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       other_user = user_fixture()
       other_habit = habit_fixture(other_user, %{name: "Other User Habit"})
 
-      {:ok, lv, _html} = live(conn, ~p"/streaks")
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
 
-      original_order = [habit1.id, habit2.id, habit3.id]
-
-      lv
-      |> element("#habits-list")
-      |> render_hook("reorder", %{"ids" => ["#{habit1.id}", "#{other_habit.id}"]})
-
+      # Verify only user's habits are shown
       habits = Habits.list_habits(user)
       assert length(habits) == 3
-      assert Enum.map(habits, & &1.id) == original_order
+      assert Enum.map(habits, & &1.id) == [habit1.id, habit2.id, habit3.id]
 
+      # Other user's habit should not appear
+      refute html =~ "Other User Habit"
+      refute html =~ ~s(phx-value-id="#{other_habit.id}")
+
+      # Other user's habits remain unchanged
       other_habits = Habits.list_habits(other_user)
       assert hd(other_habits).id == other_habit.id
     end

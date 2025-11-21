@@ -100,22 +100,15 @@
     </div>
     
 <!-- Habits List -->
-    <div
-      id="habits-list"
-      phx-hook="Sortable"
-      data-handle=".drag-handle"
-      class="space-y-6"
-    >
-      <div
-        :for={habit <- @habits}
-        data-id={habit.id}
-      >
-        <HabitCard.habit_card
-          habit={habit}
-          current_user={@current_scope.user}
-          timezone={@timezone}
-        />
-      </div>
+    <div id="habits-list" class="space-y-6">
+      <HabitCard.habit_card
+        :for={{habit, index} <- Enum.with_index(@habits)}
+        habit={habit}
+        current_user={@current_scope.user}
+        timezone={@timezone}
+        is_first={index == 0}
+        is_last={index == length(@habits) - 1}
+      />
     </div>
     
 <!-- Quantity Input Modal -->

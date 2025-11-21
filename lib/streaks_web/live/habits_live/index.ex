@@ -226,16 +226,71 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
-  def handle_event("reorder", %{"ids" => ids}, socket) do
-    habit_ids = Enum.map(ids, &String.to_integer/1)
+  def handle_event("move_habit_up", %{"id" => id}, socket) do
+    with {:ok, habit} <- fetch_user_habit(id, socket) do
+      habits = socket.assigns.habits
+      current_index = Enum.find_index(habits, &(&1.id == habit.id))
 
-    case Habits.reorder_habits(socket.assigns.current_scope.user, habit_ids) do
-      {:ok, _habits} ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
-        {:noreply, assign(socket, :habits, habits)}
+      if current_index && current_index > 0 do
+        # Swap with previous habit
+        new_order =
+          habits
+          |> Enum.with_index()
+          |> Enum.map(fn {h, idx} ->
+            cond do
+              idx == current_index - 1 -> Enum.at(habits, current_index).id
+              idx == current_index -> Enum.at(habits, current_index - 1).id
+              true -> h.id
+            end
+          end)
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+        case Habits.reorder_habits(socket.assigns.current_scope.user, new_order) do
+          {:ok, _habits} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
+            {:noreply, assign(socket, :habits, habits)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+        end
+      else
+        {:noreply, socket}
+      end
+    else
+      :error -> {:noreply, habit_not_found(socket)}
+    end
+  end
+
+  def handle_event("move_habit_down", %{"id" => id}, socket) do
+    with {:ok, habit} <- fetch_user_habit(id, socket) do
+      habits = socket.assigns.habits
+      current_index = Enum.find_index(habits, &(&1.id == habit.id))
+
+      if current_index && current_index < length(habits) - 1 do
+        # Swap with next habit
+        new_order =
+          habits
+          |> Enum.with_index()
+          |> Enum.map(fn {h, idx} ->
+            cond do
+              idx == current_index -> Enum.at(habits, current_index + 1).id
+              idx == current_index + 1 -> Enum.at(habits, current_index).id
+              true -> h.id
+            end
+          end)
+
+        case Habits.reorder_habits(socket.assigns.current_scope.user, new_order) do
+          {:ok, _habits} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
+            {:noreply, assign(socket, :habits, habits)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+        end
+      else
+        {:noreply, socket}
+      end
+    else
+      :error -> {:noreply, habit_not_found(socket)}
     end
   end
 

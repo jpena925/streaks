@@ -1,12 +1,15 @@
 # Streaks
 
-A habit tracker with a GitHub-style contribution grid. Built with Phoenix LiveView.
+A habit tracker with a GitHub-style contribution grid. 
 
-## What it does
+<img width="734" height="557" alt="Screenshot 2025-11-17 at 6 22 46 PM" src="https://github.com/user-attachments/assets/6b2ffb89-127e-4abd-94a6-d0f125dd6682" />
 
-Track daily habits and see your streaks. Click a day to mark it complete, watch your streak counter go up. That's pretty much it.
 
-You can also track quantity-based habits (like "drink 8 glasses of water") which show up as different shades of green based on how many times you did the thing.
+## How to Track your habits
+
+1. Add a Habit
+2. Name it
+3. Decide if it is a simple "did it" or not kind of habit, or it is quantitative in some way (like glasses of water a day).
 
 ## Running it locally
 
@@ -23,27 +26,16 @@ After running `mix setup` which runs the seeds, login with:
 user: demo@streaks.com
 password: password123456
 
-Visit `localhost:4000` and you're good to go.
+check out `localhost:4000` in your browser for your local version
 
-## Tech stack
+## Stack
 
 - Phoenix 1.8 + LiveView
 - PostgreSQL
 - Tailwind CSS
-- Deployed via Gigalixir
-
-## How it works
-
-The whole UI is Phoenix LiveView. The habit grid updates in real-time when you click days.
-
-Timezone detection happens client-side and gets passed to the server, so "today" means today in your timezone, not UTC.
-
-Streaks are calculated on every page load from your completion data:
-
-- Current streak counts backward from today/yesterday
-- Longest streak finds the longest consecutive run ever
+- Deployed via Gigalixir (yay free)
 
 ## Contributions
 
-Work on a feature branch and open a PR. I actually use this all the time so am open to ideas how to make it better, even if its just a refactor.
+Personally, I use this every day and add features as I want them. If you have suggestions, please open an issue and I'd be happy to take a look.
 

@@ -462,7 +462,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
-      # Move first habit down
       lv
       |> element("button[phx-click='move_habit_down'][phx-value-id='#{habit1.id}']")
       |> render_click()
@@ -483,7 +482,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
-      # Move third habit up
       lv
       |> element("button[phx-click='move_habit_up'][phx-value-id='#{habit3.id}']")
       |> render_click()
@@ -498,7 +496,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
-      # Verify the up button is disabled for the first habit
       html = render(lv)
       assert html =~ ~s(phx-click="move_habit_up")
       assert html =~ ~s(phx-value-id="#{habit1.id}")
@@ -511,7 +508,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
-      # Verify the down button is disabled for the last habit
       html = render(lv)
       assert html =~ ~s(phx-click="move_habit_down")
       assert html =~ ~s(phx-value-id="#{habit3.id}")
@@ -527,7 +523,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     } do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
-      # Move habit1 down, then habit1 down again
       lv
       |> element("button[phx-click='move_habit_down'][phx-value-id='#{habit1.id}']")
       |> render_click()
@@ -539,7 +534,6 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       {:ok, _new_lv, _html} = live(conn, ~p"/streaks")
 
       habits = Habits.list_habits(user)
-      # habit1 moved down twice: habit2, habit3, habit1
       assert Enum.map(habits, & &1.id) == [habit2.id, habit3.id, habit1.id]
     end
 
@@ -555,16 +549,13 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
 
       {:ok, _lv, html} = live(conn, ~p"/streaks")
 
-      # Verify only user's habits are shown
       habits = Habits.list_habits(user)
       assert length(habits) == 3
       assert Enum.map(habits, & &1.id) == [habit1.id, habit2.id, habit3.id]
 
-      # Other user's habit should not appear
       refute html =~ "Other User Habit"
       refute html =~ ~s(phx-value-id="#{other_habit.id}")
 
-      # Other user's habits remain unchanged
       other_habits = Habits.list_habits(other_user)
       assert hd(other_habits).id == other_habit.id
     end

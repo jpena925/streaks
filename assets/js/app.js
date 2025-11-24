@@ -25,11 +25,9 @@ import { LiveSocket } from "phoenix_live_view";
 import { hooks as colocatedHooks } from "phoenix-colocated/streaks";
 import topbar from "../vendor/topbar";
 import Tooltip from "./hooks/tooltip";
-import Sortable from "./hooks/sortable";
 
 let Hooks = {};
 Hooks.Tooltip = Tooltip;
-Hooks.Sortable = Sortable;
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")

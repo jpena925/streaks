@@ -226,17 +226,12 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
-  def handle_event("reorder", %{"ids" => ids}, socket) do
-    habit_ids = Enum.map(ids, &String.to_integer/1)
+  def handle_event("move_habit_up", %{"id" => id}, socket) do
+    move_habit(id, :up, socket)
+  end
 
-    case Habits.reorder_habits(socket.assigns.current_scope.user, habit_ids) do
-      {:ok, _habits} ->
-        habits = Habits.list_habits(socket.assigns.current_scope.user)
-        {:noreply, assign(socket, :habits, habits)}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
-    end
+  def handle_event("move_habit_down", %{"id" => id}, socket) do
+    move_habit(id, :down, socket)
   end
 
   @spec reset_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
@@ -273,5 +268,53 @@ defmodule StreaksWeb.HabitsLive.Index do
     socket
     |> assign(:habits, habits)
     |> put_flash(:error, "Habit not found. It may have been deleted.")
+  end
+
+  defp move_habit(id, direction, socket) do
+    with {:ok, habit} <- fetch_user_habit(id, socket),
+         habits <- socket.assigns.habits,
+         {:ok, current_index} <- find_habit_index(habits, habit.id),
+         {:ok, swap_index} <- get_swap_index(current_index, direction, length(habits)) do
+      new_order = swap_habit_ids(habits, current_index, swap_index)
+      reorder_and_refresh(socket, new_order)
+    else
+      :error -> {:noreply, habit_not_found(socket)}
+      {:error, :boundary} -> {:noreply, socket}
+    end
+  end
+
+  defp find_habit_index(habits, habit_id) do
+    case Enum.find_index(habits, &(&1.id == habit_id)) do
+      nil -> :error
+      index -> {:ok, index}
+    end
+  end
+
+  defp get_swap_index(current_index, :up, _length) when current_index > 0 do
+    {:ok, current_index - 1}
+  end
+
+  defp get_swap_index(current_index, :down, length) when current_index < length - 1 do
+    {:ok, current_index + 1}
+  end
+
+  defp get_swap_index(_current_index, _direction, _length), do: {:error, :boundary}
+
+  defp swap_habit_ids(habits, index1, index2) do
+    habits
+    |> List.update_at(index1, fn _ -> Enum.at(habits, index2) end)
+    |> List.update_at(index2, fn _ -> Enum.at(habits, index1) end)
+    |> Enum.map(& &1.id)
+  end
+
+  defp reorder_and_refresh(socket, new_order) do
+    case Habits.reorder_habits(socket.assigns.current_scope.user, new_order) do
+      {:ok, _habits} ->
+        habits = Habits.list_habits(socket.assigns.current_scope.user)
+        {:noreply, assign(socket, :habits, habits)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+    end
   end
 end

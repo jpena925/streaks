@@ -117,11 +117,5 @@
 	display: contents;
 }
 
-/* Drag and drop styles */
-.drag-over {
-	opacity: 0.5;
-	transform: scale(0.98);
-	transition: all 0.2s ease;
-}
 
 /* This file is for your main application CSS */

@@ -7,6 +7,8 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
   attr :habit, :map, required: true
   attr :current_user, :map, required: true
   attr :timezone, :string, required: true
+  attr :is_first, :boolean, default: false
+  attr :is_last, :boolean, default: false
 
   def habit_card(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
@@ -29,14 +31,34 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     <.card>
       <!-- Header -->
       <div class="mb-4">
-        <!-- Drag handle and editable habit name -->
+        <!-- Reorder buttons and editable habit name -->
         <div class="flex items-center gap-2 mb-2">
-          <button
-            class="drag-handle text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing"
-            title="Drag to reorder"
-          >
-            <.icon name="hero-bars-3" class="w-4 h-4" />
-          </button>
+          <div class="flex flex-col gap-0.5">
+            <button
+              phx-click="move_habit_up"
+              phx-value-id={@habit.id}
+              disabled={@is_first}
+              class={[
+                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                @is_first && "opacity-30 cursor-not-allowed"
+              ]}
+              title="Move up"
+            >
+              <.icon name="hero-chevron-up" class="w-4 h-4" />
+            </button>
+            <button
+              phx-click="move_habit_down"
+              phx-value-id={@habit.id}
+              disabled={@is_last}
+              class={[
+                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                @is_last && "opacity-30 cursor-not-allowed"
+              ]}
+              title="Move down"
+            >
+              <.icon name="hero-chevron-down" class="w-4 h-4" />
+            </button>
+          </div>
           <input
             type="text"
             value={@habit.name}

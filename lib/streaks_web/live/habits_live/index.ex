@@ -17,21 +17,25 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:quantity_value, "")
       |> assign(:is_edit_mode, false)
       |> assign(:loading, true)
+      |> assign(:show_archived, false)
       |> assign_new_habit_form()
 
     socket =
       if connected?(socket) do
         time_zone = get_connect_params(socket)["timeZone"] || "UTC"
         habits = Habits.list_habits(socket.assigns.current_scope.user)
+        archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
 
         socket
         |> assign(:timezone, time_zone)
         |> assign(:habits, habits)
+        |> assign(:archived_habits, archived_habits)
         |> assign(:loading, false)
       else
         socket
         |> assign(:timezone, "UTC")
         |> assign(:habits, [])
+        |> assign(:archived_habits, [])
       end
 
     {:ok, socket}
@@ -98,22 +102,78 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
-  def handle_event("delete_habit", %{"id" => id}, socket) do
+  def handle_event("archive_habit", %{"id" => id}, socket) do
     with {:ok, habit} <- fetch_user_habit(id, socket),
-         {:ok, _habit} <- Habits.delete_habit(habit) do
+         {:ok, _habit} <- Habits.archive_habit(habit) do
       habits = Habits.list_habits(socket.assigns.current_scope.user)
+      archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
 
       {:noreply,
        socket
        |> assign(:habits, habits)
-       |> put_flash(:info, "Habit deleted successfully!")}
+       |> assign(:archived_habits, archived_habits)
+       |> put_flash(:info, "Habit archived successfully!")}
     else
       :error ->
         {:noreply, habit_not_found(socket)}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Error deleting habit")}
+        {:noreply, put_flash(socket, :error, "Error archiving habit")}
     end
+  end
+
+  def handle_event("unarchive_habit", %{"id" => id}, socket) do
+    habit =
+      Enum.find(socket.assigns.archived_habits, fn h -> h.id == String.to_integer(id) end)
+
+    case habit do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Archived habit not found")}
+
+      habit ->
+        case Habits.unarchive_habit(habit) do
+          {:ok, _habit} ->
+            habits = Habits.list_habits(socket.assigns.current_scope.user)
+            archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
+
+            {:noreply,
+             socket
+             |> assign(:habits, habits)
+             |> assign(:archived_habits, archived_habits)
+             |> put_flash(:info, "Habit restored successfully!")}
+
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Error restoring habit")}
+        end
+    end
+  end
+
+  def handle_event("delete_habit", %{"id" => id}, socket) do
+    habit =
+      Enum.find(socket.assigns.archived_habits, fn h -> h.id == String.to_integer(id) end)
+
+    case habit do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Archived habit not found")}
+
+      habit ->
+        case Habits.delete_habit(habit) do
+          {:ok, _habit} ->
+            archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
+
+            {:noreply,
+             socket
+             |> assign(:archived_habits, archived_habits)
+             |> put_flash(:info, "Habit permanently deleted!")}
+
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Error deleting habit")}
+        end
+    end
+  end
+
+  def handle_event("toggle_archived", _params, socket) do
+    {:noreply, assign(socket, :show_archived, !socket.assigns.show_archived)}
   end
 
   def handle_event("log_day", %{"habit_id" => habit_id, "date" => date}, socket) do
@@ -264,10 +324,12 @@ defmodule StreaksWeb.HabitsLive.Index do
   @spec habit_not_found(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   defp habit_not_found(socket) do
     habits = Habits.list_habits(socket.assigns.current_scope.user)
+    archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
 
     socket
     |> assign(:habits, habits)
-    |> put_flash(:error, "Habit not found. It may have been deleted.")
+    |> assign(:archived_habits, archived_habits)
+    |> put_flash(:error, "Habit not found. It may have been archived or deleted.")
   end
 
   defp move_habit(id, direction, socket) do
@@ -315,6 +377,21 @@ defmodule StreaksWeb.HabitsLive.Index do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to reorder habits")}
+    end
+  end
+
+  defp format_relative_time(datetime) do
+    now = DateTime.utc_now()
+    diff_seconds = DateTime.diff(now, datetime)
+
+    cond do
+      diff_seconds < 60 -> "just now"
+      diff_seconds < 3600 -> "#{div(diff_seconds, 60)} minutes ago"
+      diff_seconds < 86_400 -> "#{div(diff_seconds, 3600)} hours ago"
+      diff_seconds < 604_800 -> "#{div(diff_seconds, 86_400)} days ago"
+      diff_seconds < 2_592_000 -> "#{div(diff_seconds, 604_800)} weeks ago"
+      diff_seconds < 31_536_000 -> "#{div(diff_seconds, 2_592_000)} months ago"
+      true -> "#{div(diff_seconds, 31_536_000)} years ago"
     end
   end
 end

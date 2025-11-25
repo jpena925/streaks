@@ -183,25 +183,124 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     end
   end
 
-  describe "delete habit" do
+  describe "archive habit" do
     setup %{conn: conn} do
       user = user_fixture()
-      habit = habit_fixture(user, %{name: "To Delete"})
+      habit = habit_fixture(user, %{name: "To Archive"})
       %{conn: log_in_user(conn, user), user: user, habit: habit}
     end
 
-    test "deletes a habit successfully", %{conn: conn, user: user, habit: habit} do
+    test "archives a habit successfully", %{conn: conn, user: user, habit: habit} do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
       html =
         lv
+        |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+        |> render_click()
+
+      # Habit still exists in database but is archived
+      archived_habits = Habits.list_archived_habits(user)
+      assert length(archived_habits) == 1
+      assert hd(archived_habits).name == "To Archive"
+      assert hd(archived_habits).archived_at != nil
+
+      # Not shown in active habits list
+      active_habits = Habits.list_habits(user)
+      assert active_habits == []
+
+      # Not shown in active habits
+      refute html =~ "To Archive"
+      assert html =~ "No habits yet"
+
+      # Shown in archived section
+      assert html =~ "Archived Habits (1)"
+    end
+
+    test "toggles archived habits visibility", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Archive the habit
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      # Initially archived section is collapsed (shows "Show" button)
+      html = render(lv)
+      assert html =~ "Archived Habits (1)"
+      assert html =~ "Show"
+      refute html =~ "Restore"
+
+      # Toggle to show archived habits
+      html =
+        lv
+        |> element("button[phx-click='toggle_archived']")
+        |> render_click()
+
+      # Now shows "Hide" button and the habit with restore button
+      assert html =~ "Hide"
+      assert html =~ "To Archive"
+      assert html =~ "Restore"
+    end
+
+    test "unarchives a habit successfully", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Archive the habit first
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      # Show archived section
+      lv
+      |> element("button[phx-click='toggle_archived']")
+      |> render_click()
+
+      # Unarchive the habit
+      html =
+        lv
+        |> element("button[phx-click='unarchive_habit'][phx-value-id='#{habit.id}']")
+        |> render_click()
+
+      # Habit is back in active list
+      active_habits = Habits.list_habits(user)
+      assert length(active_habits) == 1
+      assert hd(active_habits).name == "To Archive"
+      assert hd(active_habits).archived_at == nil
+
+      # Not in archived list anymore
+      archived_habits = Habits.list_archived_habits(user)
+      assert archived_habits == []
+
+      # Shows in active habits
+      assert html =~ "To Archive"
+    end
+
+    test "permanently deletes an archived habit", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      # Archive the habit first
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      # Show archived section
+      lv
+      |> element("button[phx-click='toggle_archived']")
+      |> render_click()
+
+      # Permanently delete the habit
+      _html =
+        lv
         |> element("button[phx-click='delete_habit'][phx-value-id='#{habit.id}']")
         |> render_click()
 
-      assert Habits.get_habit(habit.id, user) == nil
+      # Habit is completely gone from archived list
+      archived_habits = Habits.list_archived_habits(user)
+      assert archived_habits == []
 
-      refute html =~ "To Delete"
-      assert html =~ "No habits yet"
+      # Habit is completely gone from active list
+      active_habits = Habits.list_habits(user)
+      assert active_habits == []
     end
   end
 

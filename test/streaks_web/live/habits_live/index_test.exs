@@ -183,25 +183,105 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
     end
   end
 
-  describe "delete habit" do
+  describe "archive habit" do
     setup %{conn: conn} do
       user = user_fixture()
-      habit = habit_fixture(user, %{name: "To Delete"})
+      habit = habit_fixture(user, %{name: "To Archive"})
       %{conn: log_in_user(conn, user), user: user, habit: habit}
     end
 
-    test "deletes a habit successfully", %{conn: conn, user: user, habit: habit} do
+    test "archives a habit successfully", %{conn: conn, user: user, habit: habit} do
       {:ok, lv, _html} = live(conn, ~p"/streaks")
 
       html =
         lv
+        |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+        |> render_click()
+
+      archived_habits = Habits.list_archived_habits(user)
+      assert length(archived_habits) == 1
+      assert hd(archived_habits).name == "To Archive"
+      assert hd(archived_habits).archived_at != nil
+
+      active_habits = Habits.list_habits(user)
+      assert active_habits == []
+
+      refute html =~ "To Archive"
+      assert html =~ "No habits yet"
+
+      assert html =~ "Archived Habits (1)"
+    end
+
+    test "toggles archived habits visibility", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Archived Habits (1)"
+      assert html =~ "Show"
+      refute html =~ "Restore"
+
+      html =
+        lv
+        |> element("button[phx-click='toggle_archived']")
+        |> render_click()
+
+      assert html =~ "Hide"
+      assert html =~ "To Archive"
+      assert html =~ "Restore"
+    end
+
+    test "unarchives a habit successfully", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      lv
+      |> element("button[phx-click='toggle_archived']")
+      |> render_click()
+
+      html =
+        lv
+        |> element("button[phx-click='unarchive_habit'][phx-value-id='#{habit.id}']")
+        |> render_click()
+
+      active_habits = Habits.list_habits(user)
+      assert length(active_habits) == 1
+      assert hd(active_habits).name == "To Archive"
+      assert hd(active_habits).archived_at == nil
+
+      archived_habits = Habits.list_archived_habits(user)
+      assert archived_habits == []
+
+      assert html =~ "To Archive"
+    end
+
+    test "permanently deletes an archived habit", %{conn: conn, user: user, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element("button[phx-click='archive_habit'][phx-value-id='#{habit.id}']")
+      |> render_click()
+
+      lv
+      |> element("button[phx-click='toggle_archived']")
+      |> render_click()
+
+      _html =
+        lv
         |> element("button[phx-click='delete_habit'][phx-value-id='#{habit.id}']")
         |> render_click()
 
-      assert Habits.get_habit(habit.id, user) == nil
+      archived_habits = Habits.list_archived_habits(user)
+      assert archived_habits == []
 
-      refute html =~ "To Delete"
-      assert html =~ "No habits yet"
+      active_habits = Habits.list_habits(user)
+      assert active_habits == []
     end
   end
 

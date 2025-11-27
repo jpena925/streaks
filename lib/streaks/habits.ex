@@ -105,6 +105,25 @@ defmodule Streaks.Habits do
   end
 
   @doc """
+  Unarchives a habit (restores from archive).
+  """
+  @spec unarchive_habit(Habit.t()) :: {:ok, Habit.t()} | {:error, Ecto.Changeset.t()}
+  def unarchive_habit(%Habit{} = habit) do
+    update_habit(habit, %{archived_at: nil})
+  end
+
+  @doc """
+  Returns the list of archived habits for a user, ordered by archived date (most recent first).
+  """
+  @spec list_archived_habits(User.t()) :: [Habit.t()]
+  def list_archived_habits(%User{id: user_id}) do
+    Habit
+    |> where([h], h.user_id == ^user_id and not is_nil(h.archived_at))
+    |> order_by([h], desc: h.archived_at)
+    |> Repo.all()
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking habit changes.
   """
   @spec change_habit(Habit.t(), map()) :: Ecto.Changeset.t()

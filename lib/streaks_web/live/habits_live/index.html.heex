@@ -110,6 +110,62 @@
         is_last={index == length(@habits) - 1}
       />
     </div>
+
+    <%!-- Archived Habits Section --%>
+    <div :if={@archived_habits != []} class="mt-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-normal text-gray-600 dark:text-gray-400">
+          Archived Habits ({length(@archived_habits)})
+        </h2>
+        <button
+          phx-click="toggle_archived"
+          class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+        >
+          <span :if={!@show_archived}>Show</span>
+          <span :if={@show_archived}>Hide</span>
+          <.icon
+            name={if(@show_archived, do: "hero-chevron-up", else: "hero-chevron-down")}
+            class="w-4 h-4"
+          />
+        </button>
+      </div>
+
+      <div :if={@show_archived} class="space-y-4">
+        <.card
+          :for={habit <- @archived_habits}
+          class="opacity-75 hover:opacity-100 transition-opacity"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <h3 class="text-base font-normal text-gray-700 dark:text-gray-300">
+                {habit.name}
+              </h3>
+              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                Archived {format_relative_time(habit.archived_at)}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                phx-click="unarchive_habit"
+                phx-value-id={habit.id}
+                class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-700 hover:border-gray-900 dark:hover:border-gray-100 transition-colors"
+                title="Restore habit"
+              >
+                <.icon name="hero-arrow-uturn-left" class="w-4 h-4 inline mr-1" /> Restore
+              </button>
+              <.icon_button
+                phx-click="delete_habit"
+                phx-value-id={habit.id}
+                data-confirm="Permanently delete this habit? This cannot be undone and will delete all completion data."
+                icon="hero-trash"
+                title="Delete permanently"
+                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              />
+            </div>
+          </div>
+        </.card>
+      </div>
+    </div>
     
 <!-- Quantity Input Modal -->
     <QuantityModal.quantity_modal

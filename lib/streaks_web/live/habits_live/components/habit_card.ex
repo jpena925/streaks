@@ -86,13 +86,13 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </.badge>
           </div>
           
-    <!-- Delete button -->
+    <!-- Archive button -->
           <.icon_button
-            phx-click="delete_habit"
+            phx-click="archive_habit"
             phx-value-id={@habit.id}
-            data-confirm="Are you sure? This will permanently delete this habit and all its completion data."
-            icon="hero-trash"
-            title="Delete habit"
+            data-confirm="Archive this habit? You can restore it later from the archived section."
+            icon="hero-archive-box"
+            title="Archive habit"
           />
         </div>
       </div>

@@ -12,8 +12,9 @@ defmodule StreaksWeb.UserLive.SettingsTest do
         |> log_in_user(user_fixture())
         |> live(~p"/users/settings")
 
-      assert html =~ "Change Email"
-      assert html =~ "Save Password"
+      assert html =~ "Settings"
+      assert html =~ "Update Email"
+      assert html =~ "Update Password"
     end
 
     test "redirects if user is not logged in", %{conn: conn} do
@@ -58,7 +59,7 @@ defmodule StreaksWeb.UserLive.SettingsTest do
           "user" => %{"email" => "with spaces"}
         })
 
-      assert result =~ "Change Email"
+      assert result =~ "Update Email"
       assert result =~ "must have the @ sign and no spaces"
     end
 
@@ -72,7 +73,7 @@ defmodule StreaksWeb.UserLive.SettingsTest do
         })
         |> render_submit()
 
-      assert result =~ "Change Email"
+      assert result =~ "Update Email"
       assert result =~ "did not change"
     end
   end
@@ -124,7 +125,7 @@ defmodule StreaksWeb.UserLive.SettingsTest do
           }
         })
 
-      assert result =~ "Save Password"
+      assert result =~ "Update Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
     end
@@ -142,7 +143,7 @@ defmodule StreaksWeb.UserLive.SettingsTest do
         })
         |> render_submit()
 
-      assert result =~ "Save Password"
+      assert result =~ "Update Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
     end

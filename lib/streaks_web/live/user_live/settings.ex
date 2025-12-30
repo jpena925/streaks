@@ -16,13 +16,12 @@ defmodule StreaksWeb.UserLive.Settings do
             Manage your account preferences and security settings
           </p>
         </div>
-
-        <!-- Appearance Section -->
+        
+    <!-- Appearance Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <.icon name="hero-paint-brush" class="w-5 h-5" />
-              Appearance
+              <.icon name="hero-paint-brush" class="w-5 h-5" /> Appearance
             </h2>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Customize how Streaks looks on your device
@@ -63,13 +62,12 @@ defmodule StreaksWeb.UserLive.Settings do
             </div>
           </div>
         </div>
-
-        <!-- Account Section -->
+        
+    <!-- Account Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <.icon name="hero-envelope" class="w-5 h-5" />
-              Account
+              <.icon name="hero-envelope" class="w-5 h-5" /> Account
             </h2>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Update your email address
@@ -96,13 +94,12 @@ defmodule StreaksWeb.UserLive.Settings do
             </div>
           </.form>
         </div>
-
-        <!-- Security Section -->
+        
+    <!-- Security Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <.icon name="hero-lock-closed" class="w-5 h-5" />
-              Security
+              <.icon name="hero-lock-closed" class="w-5 h-5" /> Security
             </h2>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Change your password to keep your account secure

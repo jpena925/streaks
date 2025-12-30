@@ -87,5 +87,4 @@ defmodule StreaksWeb.Layouts do
     </div>
     """
   end
-
 end

@@ -9,59 +9,140 @@ defmodule StreaksWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="text-center">
-        <.header>
-          Account Settings
-          <:subtitle>Manage your account email address and password settings</:subtitle>
-        </.header>
+      <div class="space-y-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Manage your account preferences and security settings
+          </p>
+        </div>
+        
+    <!-- Appearance Section -->
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <.icon name="hero-paint-brush" class="w-5 h-5" /> Appearance
+            </h2>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Customize how Streaks looks on your device
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Theme
+            </label>
+            <div class="flex gap-3" phx-hook="ThemeSelector" id="theme-selector">
+              <button
+                phx-click={JS.dispatch("phx:set-theme")}
+                data-phx-theme="system"
+                class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+              >
+                <.icon name="hero-computer-desktop" class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <span class="text-sm font-medium text-gray-900 dark:text-white">System</span>
+              </button>
+
+              <button
+                phx-click={JS.dispatch("phx:set-theme")}
+                data-phx-theme="light"
+                class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+              >
+                <.icon name="hero-sun" class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Light</span>
+              </button>
+
+              <button
+                phx-click={JS.dispatch("phx:set-theme")}
+                data-phx-theme="dark"
+                class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+              >
+                <.icon name="hero-moon" class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Dark</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+    <!-- Account Section -->
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <.icon name="hero-envelope" class="w-5 h-5" /> Account
+            </h2>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Update your email address
+            </p>
+          </div>
+
+          <.form
+            for={@email_form}
+            id="email_form"
+            phx-submit="update_email"
+            phx-change="validate_email"
+          >
+            <.input
+              field={@email_form[:email]}
+              type="email"
+              label="Email"
+              autocomplete="username"
+              required
+            />
+            <div class="mt-4">
+              <.button variant="primary" phx-disable-with="Changing...">
+                Update Email
+              </.button>
+            </div>
+          </.form>
+        </div>
+        
+    <!-- Security Section -->
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <.icon name="hero-lock-closed" class="w-5 h-5" /> Security
+            </h2>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Change your password to keep your account secure
+            </p>
+          </div>
+
+          <.form
+            for={@password_form}
+            id="password_form"
+            action={~p"/users/update-password"}
+            method="post"
+            phx-change="validate_password"
+            phx-submit="update_password"
+            phx-trigger-action={@trigger_submit}
+          >
+            <input
+              name={@password_form[:email].name}
+              type="hidden"
+              id="hidden_user_email"
+              autocomplete="username"
+              value={@current_email}
+            />
+            <.input
+              field={@password_form[:password]}
+              type="password"
+              label="New password"
+              autocomplete="new-password"
+              required
+            />
+            <.input
+              field={@password_form[:password_confirmation]}
+              type="password"
+              label="Confirm new password"
+              autocomplete="new-password"
+            />
+            <div class="mt-4">
+              <.button variant="primary" phx-disable-with="Saving...">
+                Update Password
+              </.button>
+            </div>
+          </.form>
+        </div>
       </div>
-
-      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-        <.input
-          field={@email_form[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          required
-        />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
-      </.form>
-
-      <div class="divider" />
-
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          autocomplete="username"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
-      </.form>
     </Layouts.app>
     """
   end

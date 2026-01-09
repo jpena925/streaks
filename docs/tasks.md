@@ -8,46 +8,7 @@ A curated list of improvements, learning opportunities, and feature ideas—orga
 
 These directly impact your daily experience.
 
-### 1. Fix Slow Habit Toggle Response (Performance)
-
-**Problem:** Clicking a habit cube on mobile feels sluggish.
-
-**Root cause:** Every toggle does:
-
-1. Server round-trip to log/unlog completion
-2. Full `list_habits/1` query reloading ALL habits with ALL completions
-3. Full re-render of the entire habit list
-
-**Solution - Optimistic UI + Targeted Updates:**
-
-```elixir
-# In handle_event("log_day", ...) - instead of:
-habits = Habits.list_habits(socket.assigns.current_scope.user)
-{:noreply, assign(socket, :habits, habits)}
-
-# Do targeted update:
-{:noreply, update_habit_in_list(socket, habit_id, fn habit ->
-  completion = %HabitCompletion{completed_on: date, quantity: nil}
-  %{habit | completions: [completion | habit.completions]}
-end)}
-```
-
-**Even better - Use LiveView Streams:**
-
-- Convert `@habits` list to `stream(:habits, habits)`
-- Use `stream_insert/3` for targeted updates
-- Eliminates diffing the entire list
-
-**Learning opportunity:** Understanding LiveView's diffing algorithm and streams.
-
-**Files to modify:**
-
-- `lib/streaks_web/live/habits_live/index.ex`
-- `lib/streaks_web/live/habits_live/index.html.heex`
-
----
-
-### 2. Add "Today Mode" for 7+ Habits (UX)
+### 1. Add "Today Mode" for 7+ Habits (UX)
 
 **Problem:** Scrolling through 7 contribution grids daily is tedious.
 
@@ -83,7 +44,7 @@ end)}
 
 ---
 
-### 3. Configurable Quantity Thresholds
+### 2. Configurable Quantity Thresholds
 
 **Problem:** The 1-2/3-5/6-8/9+ thresholds are hardcoded and don't fit all habits.
 
@@ -130,7 +91,7 @@ end
 
 Make Streaks installable on your iPhone home screen.
 
-### 4. Progressive Web App (PWA) Setup
+### 3. Progressive Web App (PWA) Setup
 
 **What you get:**
 
@@ -191,7 +152,7 @@ Create `priv/static/sw.js` for offline caching. This is where you'd cache the ap
 
 ---
 
-### 5. Touch-Optimized Interactions
+### 4. Touch-Optimized Interactions
 
 **Problem:** Small 14px habit cubes are hard to tap on mobile.
 
@@ -230,7 +191,7 @@ export default {
 
 You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
-### 6. CRT/Retro Visual Effects
+### 5. CRT/Retro Visual Effects
 
 **Ideas:**
 
@@ -277,7 +238,7 @@ You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
 ---
 
-### 7. ASCII Art & Terminal Decorations
+### 6. ASCII Art & Terminal Decorations
 
 **Header example:**
 
@@ -306,7 +267,7 @@ You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
 These are overkill for a single-user app but great for learning.
 
-### 8. GenServer: Streak Calculator Cache
+### 7. GenServer: Streak Calculator Cache
 
 **The idea:** Instead of recalculating streaks on every page load, maintain a GenServer that:
 
@@ -338,7 +299,7 @@ end
 
 ---
 
-### 9. Phoenix Channels: Real-Time Sync
+### 8. Phoenix Channels: Real-Time Sync
 
 **Use case:** If you have the app open on phone AND laptop, logging a habit on one device instantly updates the other.
 
@@ -362,7 +323,7 @@ StreaksWeb.Endpoint.broadcast("user:#{user.id}", "habit_updated", %{habit_id: id
 
 ---
 
-### 10. Oban: Background Jobs
+### 9. Oban: Background Jobs
 
 **Use cases (even for single user):**
 
@@ -392,7 +353,7 @@ end
 
 ---
 
-### 11. Presence: Who's Online (for future social features)
+### 10. Presence: Who's Online (for future social features)
 
 **When you add friends:** Show who's currently active.
 
@@ -414,7 +375,7 @@ StreaksWeb.Presence.track(socket, "users:online", user.id, %{
 
 ## 👥 Social Features
 
-### 12. Public Streak Pages
+### 11. Public Streak Pages
 
 **URL:** `yourapp.com/u/username` or `yourapp.com/s/:share_token`
 
@@ -438,7 +399,7 @@ live "/s/:token", SharedStreaksLive, :show
 
 ---
 
-### 13. Accountability Partners
+### 12. Accountability Partners
 
 **Features:**
 
@@ -463,7 +424,7 @@ end
 
 ## 🏗️ Infrastructure (For Fun/Learning)
 
-### 14. ETS Caching
+### 13. ETS Caching
 
 **What:** In-memory caching without external dependencies (like Redis).
 
@@ -496,7 +457,7 @@ end
 
 ---
 
-### 15. Telemetry & Observability
+### 14. Telemetry & Observability
 
 **Add custom telemetry events:**
 
@@ -518,7 +479,7 @@ end
 
 ---
 
-### 16. Rate Limiting (for public features)
+### 15. Rate Limiting (for public features)
 
 When you add public pages/API, add rate limiting:
 
@@ -534,7 +495,7 @@ end
 
 ## 🧹 Code Quality & DX
 
-### 17. Extract Calendar Module
+### 16. Extract Calendar Module
 
 Move date/calendar logic to its own module as suggested in existing roadmap.
 
@@ -549,7 +510,7 @@ end
 
 ---
 
-### 18. Add More Typespecs
+### 17. Add More Typespecs
 
 Your existing typespecs are good. Add them to:
 
@@ -561,7 +522,7 @@ Consider enabling Dialyzer's `--strict` mode.
 
 ---
 
-### 19. Property-Based Testing
+### 18. Property-Based Testing
 
 Use StreamData for testing streak calculations:
 
@@ -581,17 +542,75 @@ end
 
 **Week 1-2: Daily Pain Points**
 
-1. [ ] Fix slow toggle (streams + optimistic UI)
+1. [x] ~~Fix slow toggle (targeted updates + N+1 fix)~~ ✅ Done
 2. [ ] Add "Today" compact view
 3. [ ] Larger touch targets on mobile
 
-**Week 3-4: PWA** 4. [ ] Add manifest.json 5. [ ] Add proper icons 6. [ ] Test "Add to Home Screen" on iPhone
+**Week 3-4: PWA**
 
-**Week 5-6: Aesthetic** 7. [ ] Add CRT/retro effects (opt-in toggle) 8. [ ] Experiment with ASCII borders
+4. [ ] Add manifest.json
+5. [ ] Add proper icons
+6. [ ] Test "Add to Home Screen" on iPhone
 
-**Week 7-8: Backend Learning** 9. [ ] Implement GenServer streak cache 10. [ ] Add real-time sync with Channels
+**Week 5-6: Aesthetic**
 
-**Future: Social** 11. [ ] Public profile pages 12. [ ] Share tokens 13. [ ] Accountability partners
+7. [ ] Add CRT/retro effects (opt-in toggle)
+8. [ ] Experiment with ASCII borders
+
+**Week 7-8: Backend Learning**
+
+9. [ ] Implement GenServer streak cache
+10. [ ] Add real-time sync with Channels
+
+**Future: Social**
+
+11. [ ] Public profile pages
+12. [ ] Share tokens
+13. [ ] Accountability partners
+
+---
+
+## ⚡ Optional Enhancement: LiveView Streams
+
+Convert `@habits` list to LiveView streams for even better performance. Currently we use targeted in-memory updates which eliminated the N+1 and full refetch. Streams would take it further by only diffing the changed habit card on the server.
+
+**Current approach (good enough for now):**
+
+- Targeted updates via `update_habit_in_list/3`
+- Server still re-renders all habit cards to compute diff
+- Works well for < 20 habits
+
+**Streams approach (for learning or scaling):**
+
+```elixir
+# In mount:
+socket = stream(socket, :habits, habits)
+
+# In handle_event:
+socket = stream_insert(socket, :habits, updated_habit)
+```
+
+Template changes:
+
+```heex
+<!-- Current -->
+<HabitCard.habit_card :for={{habit, index} <- Enum.with_index(@habits)} ... />
+
+<!-- With streams -->
+<div id="habits-list" phx-update="stream">
+  <HabitCard.habit_card :for={{dom_id, habit} <- @streams.habits} id={dom_id} ... />
+</div>
+```
+
+**Tradeoffs:**
+
+- ✅ Only changed habit re-renders on server
+- ✅ Better memory efficiency
+- ⚠️ Can't easily get `length(@habits)` or check `@habits == []`
+- ⚠️ Reordering requires `stream/4` with `reset: true`
+- ⚠️ More abstract mental model
+
+**When to do this:** If you notice sluggishness with 10+ habits, or want to learn streams.
 
 ---
 

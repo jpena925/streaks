@@ -188,9 +188,8 @@ defmodule StreaksWeb.HabitsLive.Index do
          |> assign(:is_edit_mode, false)}
       else
         case Habits.log_habit_completion(habit, date) do
-          {:ok, _completion} ->
-            habits = Habits.list_habits(socket.assigns.current_scope.user)
-            {:noreply, assign(socket, :habits, habits)}
+          {:ok, completion} ->
+            {:noreply, add_completion_to_habit(socket, habit.id, completion)}
 
           {:error, _changeset} ->
             {:noreply, put_flash(socket, :error, "Error logging completion")}
@@ -224,8 +223,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("unlog_day", %{"habit_id" => habit_id, "date" => date}, socket) do
     with {:ok, habit} <- fetch_user_habit(habit_id, socket) do
       :ok = Habits.unlog_habit_completion(habit, date)
-      habits = Habits.list_habits(socket.assigns.current_scope.user)
-      {:noreply, assign(socket, :habits, habits)}
+      {:noreply, remove_completion_from_habit(socket, habit.id, date)}
     else
       :error -> {:noreply, habit_not_found(socket)}
     end
@@ -245,13 +243,11 @@ defmodule StreaksWeb.HabitsLive.Index do
     with {quantity, _} <- Integer.parse(quantity_str),
          true <- quantity > 0,
          {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket),
-         {:ok, _completion} <-
+         {:ok, completion} <-
            Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
-      habits = Habits.list_habits(socket.assigns.current_scope.user)
-
       {:noreply,
        socket
-       |> assign(:habits, habits)
+       |> add_completion_to_habit(habit.id, completion)
        |> assign(:show_quantity_modal, false)
        |> assign(:quantity_habit_id, nil)
        |> assign(:quantity_date, nil)
@@ -269,11 +265,10 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("delete_quantity", _params, socket) do
     with {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket) do
       :ok = Habits.unlog_habit_completion(habit, socket.assigns.quantity_date)
-      habits = Habits.list_habits(socket.assigns.current_scope.user)
 
       {:noreply,
        socket
-       |> assign(:habits, habits)
+       |> remove_completion_from_habit(habit.id, socket.assigns.quantity_date)
        |> assign(:show_quantity_modal, false)
        |> assign(:quantity_habit_id, nil)
        |> assign(:quantity_date, nil)
@@ -392,6 +387,48 @@ defmodule StreaksWeb.HabitsLive.Index do
       diff_seconds < 2_592_000 -> "#{div(diff_seconds, 604_800)} weeks ago"
       diff_seconds < 31_536_000 -> "#{div(diff_seconds, 2_592_000)} months ago"
       true -> "#{div(diff_seconds, 31_536_000)} years ago"
+    end
+  end
+
+  defp add_completion_to_habit(socket, habit_id, completion) do
+    update_habit_in_list(socket, habit_id, fn habit ->
+      completions =
+        habit.completions
+        |> Enum.reject(&(&1.completed_on == completion.completed_on))
+        |> List.insert_at(0, completion)
+
+      %{habit | completions: completions}
+    end)
+  end
+
+  defp remove_completion_from_habit(socket, habit_id, date) do
+    parsed_date = parse_date(date)
+
+    update_habit_in_list(socket, habit_id, fn habit ->
+      completions = Enum.reject(habit.completions, &(&1.completed_on == parsed_date))
+      %{habit | completions: completions}
+    end)
+  end
+
+  defp update_habit_in_list(socket, habit_id, update_fn) do
+    habits =
+      Enum.map(socket.assigns.habits, fn habit ->
+        if habit.id == habit_id do
+          update_fn.(habit)
+        else
+          habit
+        end
+      end)
+
+    assign(socket, :habits, habits)
+  end
+
+  defp parse_date(%Date{} = date), do: date
+
+  defp parse_date(date) when is_binary(date) do
+    case Date.from_iso8601(date) do
+      {:ok, parsed} -> parsed
+      {:error, _} -> nil
     end
   end
 end

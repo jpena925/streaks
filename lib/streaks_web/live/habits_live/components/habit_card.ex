@@ -15,8 +15,10 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     completions_map = get_completions_map(assigns.habit)
     habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
-    streaks = Habits.calculate_streaks(assigns.habit, assigns.timezone)
     today = Habits.today(assigns.timezone)
+
+    streak_dates = Enum.map(assigns.habit.completions, & &1.completed_on)
+    streaks = Habits.calculate_streaks_from_dates(streak_dates, assigns.timezone)
 
     assigns =
       assigns

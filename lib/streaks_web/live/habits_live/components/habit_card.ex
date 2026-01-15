@@ -123,12 +123,15 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     <!-- Habit completion grid -->
             <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
               <HabitCube.habit_cube
-                :for={{day, index} <- Enum.with_index(@habit_days)}
+                :for={{day, _index} <- Enum.with_index(@habit_days)}
                 date={day}
                 completed={MapSet.member?(@completion_dates, day)}
                 quantity={Map.get(@completions_map, day)}
                 habit_id={@habit.id}
                 has_quantity={@habit.has_quantity}
+                quantity_low={@habit.quantity_low || 1}
+                quantity_high={@habit.quantity_high || 10}
+                quantity_unit={@habit.quantity_unit}
                 is_today={day == @today}
                 is_future={Date.compare(day, @today) == :gt}
               />

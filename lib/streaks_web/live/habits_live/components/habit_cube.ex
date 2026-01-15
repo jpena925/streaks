@@ -8,34 +8,23 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   attr :is_today, :boolean, default: false
   attr :is_future, :boolean, default: false
   attr :has_quantity, :boolean, default: false
+  attr :quantity_low, :integer, default: 1
+  attr :quantity_high, :integer, default: 10
+  attr :quantity_unit, :string, default: nil
 
   def habit_cube(assigns) do
     title = Date.to_iso8601(assigns.date)
 
     completed_classes =
-      if assigns.quantity do
-        cond do
-          assigns.quantity <= 2 ->
-            "bg-green-300 border-transparent shadow-sm"
+      quantity_intensity_class(assigns.quantity, assigns.quantity_low, assigns.quantity_high)
 
-          assigns.quantity <= 5 ->
-            "bg-green-500 border-transparent shadow-sm"
-
-          assigns.quantity <= 8 ->
-            "bg-green-700 border-transparent shadow-sm"
-
-          true ->
-            # 9+
-            "bg-green-800 border-transparent shadow-sm"
-        end
-      else
-        "bg-green-500 border-transparent shadow-sm"
-      end
+    tooltip_text = format_tooltip(assigns.quantity, assigns.quantity_unit)
 
     assigns =
       assigns
       |> assign(:title, title)
       |> assign(:completed_classes, completed_classes)
+      |> assign(:tooltip_text, tooltip_text)
 
     ~H"""
     <div
@@ -69,9 +58,48 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
       phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}
-      data-tooltip-text={if(@quantity && @completed, do: "#{@quantity} times", else: nil)}
+      data-tooltip-text={if(@quantity && @completed, do: @tooltip_text, else: nil)}
     >
     </div>
     """
   end
+
+  defp quantity_intensity_class(nil, _low, _high) do
+    "bg-green-500 border-transparent shadow-sm"
+  end
+
+  defp quantity_intensity_class(quantity, low, high) do
+    level = intensity_level(quantity, low, high)
+
+    case level do
+      1 -> "bg-green-300 border-transparent shadow-sm"
+      2 -> "bg-green-400 border-transparent shadow-sm"
+      3 -> "bg-green-500 border-transparent shadow-sm"
+      4 -> "bg-green-600 border-transparent shadow-sm"
+      _ -> "bg-green-700 border-transparent shadow-sm"
+    end
+  end
+
+  defp intensity_level(quantity, low, high) when high > low do
+    range = high - low
+
+    cond do
+      quantity <= low ->
+        1
+
+      quantity >= high ->
+        5
+
+      true ->
+        normalized = (quantity - low) / range
+        trunc(normalized * 4) + 1
+    end
+  end
+
+  defp intensity_level(_quantity, _low, _high), do: 3
+
+  defp format_tooltip(nil, _unit), do: nil
+  defp format_tooltip(quantity, nil), do: "#{quantity}"
+  defp format_tooltip(quantity, ""), do: "#{quantity}"
+  defp format_tooltip(quantity, unit), do: "#{quantity} #{unit}"
 end

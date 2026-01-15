@@ -8,7 +8,24 @@ A curated list of improvements, learning opportunities, and feature ideas—orga
 
 These directly impact your daily experience.
 
-### 1. Add "Today Mode" for 7+ Habits (UX)
+### 1. Edit Quantity Config for Existing Habits
+
+**Problem:** Users can set quantity range (low/high) when creating a habit, but can't edit it for existing habits.
+
+**Solution:** Add an edit modal or settings panel for habits that allows:
+
+- Editing habit name (already works inline)
+- Configuring quantity range for quantity habits
+
+**Options:**
+
+- Gear icon on habit card → opens settings modal
+- Expand the inline editing to include quantity settings
+- Add a "Configure" button that appears for quantity habits
+
+---
+
+### 2. Add "Today Mode" for 7+ Habits (UX)
 
 **Problem:** Scrolling through 7 contribution grids daily is tedious.
 
@@ -44,46 +61,15 @@ These directly impact your daily experience.
 
 ---
 
-### 2. Configurable Quantity Thresholds
+### ~~2. Configurable Quantity Thresholds~~ ✅ Done
 
-**Problem:** The 1-2/3-5/6-8/9+ thresholds are hardcoded and don't fit all habits.
+Added per-habit quantity range configuration:
 
-**Solution - Per-habit quantity settings:**
+- `quantity_low` - low end of expected range (lightest green)
+- `quantity_high` - high end of expected range (darkest green)
+- `quantity_unit` - what you're counting (shows in tooltip: "5 drinks")
 
-```elixir
-# Migration
-alter table(:habits) do
-  add :quantity_goal, :integer  # The "max" value for darkest green
-  add :quantity_unit, :string   # e.g., "drinks", "pushups", "pages"
-end
-```
-
-**UI:** When creating/editing a quantity habit:
-
-- "What's your daily goal?" → quantity_goal
-- "What are you counting?" → quantity_unit (shows in tooltip: "5 drinks")
-
-**Gradient calculation:**
-
-```elixir
-def intensity_level(quantity, goal) do
-  percentage = quantity / goal * 100
-  cond do
-    percentage >= 100 -> 4  # darkest
-    percentage >= 75 -> 3
-    percentage >= 50 -> 2
-    percentage >= 25 -> 1
-    true -> 0  # lightest
-  end
-end
-```
-
-**Files to modify:**
-
-- `lib/streaks/habits/habit.ex` (schema + changeset)
-- `lib/streaks_web/live/habits_live/components/habit_cube.ex` (gradient logic)
-- `lib/streaks_web/live/habits_live/index.html.heex` (form fields)
-- New migration file
+Works for both "good" habits (water: 1-8 glasses) and neutral tracking (drinks, cigarettes).
 
 ---
 

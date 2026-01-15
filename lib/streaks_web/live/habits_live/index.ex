@@ -64,10 +64,12 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("create_habit", %{"habit" => habit_params}, socket) do
-    attrs = %{
-      name: habit_params["name"],
-      has_quantity: habit_params["has_quantity"]
-    }
+    attrs =
+      %{
+        name: habit_params["name"],
+        has_quantity: habit_params["has_quantity"]
+      }
+      |> maybe_add_quantity_config(habit_params)
 
     case Habits.create_habit(socket.assigns.current_scope.user, attrs) do
       {:ok, _habit} ->
@@ -429,6 +431,26 @@ defmodule StreaksWeb.HabitsLive.Index do
     case Date.from_iso8601(date) do
       {:ok, parsed} -> parsed
       {:error, _} -> nil
+    end
+  end
+
+  defp maybe_add_quantity_config(attrs, params) do
+    if params["has_quantity"] == "true" do
+      attrs
+      |> Map.put(:quantity_low, parse_int(params["quantity_low"], 1))
+      |> Map.put(:quantity_high, parse_int(params["quantity_high"], 10))
+    else
+      attrs
+    end
+  end
+
+  defp parse_int(nil, default), do: default
+  defp parse_int("", default), do: default
+
+  defp parse_int(value, default) when is_binary(value) do
+    case Integer.parse(value) do
+      {int, _} -> int
+      :error -> default
     end
   end
 end

@@ -11,7 +11,6 @@ defmodule Streaks.Habits.Habit do
           has_quantity: boolean(),
           quantity_low: integer() | nil,
           quantity_high: integer() | nil,
-          quantity_unit: String.t() | nil,
           archived_at: DateTime.t() | nil,
           position: integer() | nil,
           user_id: integer() | nil,
@@ -26,7 +25,6 @@ defmodule Streaks.Habits.Habit do
     field :has_quantity, :boolean, default: false
     field :quantity_low, :integer, default: 1
     field :quantity_high, :integer, default: 10
-    field :quantity_unit, :string
     field :archived_at, :utc_datetime
     field :position, :integer
 
@@ -44,7 +42,6 @@ defmodule Streaks.Habits.Habit do
       :has_quantity,
       :quantity_low,
       :quantity_high,
-      :quantity_unit,
       :archived_at,
       :position
     ])

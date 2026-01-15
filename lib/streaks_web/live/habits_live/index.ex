@@ -439,7 +439,6 @@ defmodule StreaksWeb.HabitsLive.Index do
       attrs
       |> Map.put(:quantity_low, parse_int(params["quantity_low"], 1))
       |> Map.put(:quantity_high, parse_int(params["quantity_high"], 10))
-      |> Map.put(:quantity_unit, params["quantity_unit"])
     else
       attrs
     end

@@ -8,7 +8,24 @@ A curated list of improvements, learning opportunities, and feature ideas—orga
 
 These directly impact your daily experience.
 
-### 1. Add "Today Mode" for 7+ Habits (UX)
+### 1. Edit Quantity Config for Existing Habits
+
+**Problem:** Users can set quantity range (low/high) when creating a habit, but can't edit it for existing habits.
+
+**Solution:** Add an edit modal or settings panel for habits that allows:
+
+- Editing habit name (already works inline)
+- Configuring quantity range for quantity habits
+
+**Options:**
+
+- Gear icon on habit card → opens settings modal
+- Expand the inline editing to include quantity settings
+- Add a "Configure" button that appears for quantity habits
+
+---
+
+### 2. Add "Today Mode" for 7+ Habits (UX)
 
 **Problem:** Scrolling through 7 contribution grids daily is tedious.
 

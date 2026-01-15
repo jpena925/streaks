@@ -10,7 +10,6 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   attr :has_quantity, :boolean, default: false
   attr :quantity_low, :integer, default: 1
   attr :quantity_high, :integer, default: 10
-  attr :quantity_unit, :string, default: nil
 
   def habit_cube(assigns) do
     title = Date.to_iso8601(assigns.date)
@@ -18,13 +17,10 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
     completed_classes =
       quantity_intensity_class(assigns.quantity, assigns.quantity_low, assigns.quantity_high)
 
-    tooltip_text = format_tooltip(assigns.quantity, assigns.quantity_unit)
-
     assigns =
       assigns
       |> assign(:title, title)
       |> assign(:completed_classes, completed_classes)
-      |> assign(:tooltip_text, tooltip_text)
 
     ~H"""
     <div
@@ -58,7 +54,7 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
       phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}
-      data-tooltip-text={if(@quantity && @completed, do: @tooltip_text, else: nil)}
+      data-tooltip-text={if(@quantity && @completed, do: "#{@quantity}", else: nil)}
     >
     </div>
     """
@@ -97,9 +93,4 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   end
 
   defp intensity_level(_quantity, _low, _high), do: 3
-
-  defp format_tooltip(nil, _unit), do: nil
-  defp format_tooltip(quantity, nil), do: "#{quantity}"
-  defp format_tooltip(quantity, ""), do: "#{quantity}"
-  defp format_tooltip(quantity, unit), do: "#{quantity} #{unit}"
 end

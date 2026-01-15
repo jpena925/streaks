@@ -131,7 +131,6 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
                 has_quantity={@habit.has_quantity}
                 quantity_low={@habit.quantity_low || 1}
                 quantity_high={@habit.quantity_high || 10}
-                quantity_unit={@habit.quantity_unit}
                 is_today={day == @today}
                 is_future={Date.compare(day, @today) == :gt}
               />

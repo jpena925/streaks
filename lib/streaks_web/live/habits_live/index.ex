@@ -4,6 +4,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   alias Streaks.Habits
   alias Streaks.Habits.Habit
   alias StreaksWeb.HabitsLive.HabitCard
+  alias StreaksWeb.HabitsLive.HabitSettingsModal
   alias StreaksWeb.HabitsLive.QuantityModal
 
   def mount(_params, _session, socket) do
@@ -18,6 +19,9 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:is_edit_mode, false)
       |> assign(:loading, true)
       |> assign(:show_archived, false)
+      |> assign(:show_settings_modal, false)
+      |> assign(:settings_habit, nil)
+      |> assign(:settings_has_quantity, false)
       |> assign_new_habit_form()
 
     socket =
@@ -289,6 +293,84 @@ defmodule StreaksWeb.HabitsLive.Index do
 
   def handle_event("move_habit_down", %{"id" => id}, socket) do
     move_habit(id, :down, socket)
+  end
+
+  def handle_event("open_settings_modal", %{"id" => id}, socket) do
+    with {:ok, habit} <- fetch_user_habit(id, socket) do
+      {:noreply,
+       socket
+       |> assign(:show_settings_modal, true)
+       |> assign(:settings_habit, habit)
+       |> assign(:settings_has_quantity, habit.has_quantity)}
+    else
+      :error -> {:noreply, habit_not_found(socket)}
+    end
+  end
+
+  def handle_event("close_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, false)
+     |> assign(:settings_habit, nil)
+     |> assign(:settings_has_quantity, false)}
+  end
+
+  def handle_event("toggle_settings_quantity", %{"value" => "true"}, socket) do
+    {:noreply, assign(socket, :settings_has_quantity, true)}
+  end
+
+  def handle_event("toggle_settings_quantity", _params, socket) do
+    {:noreply, assign(socket, :settings_has_quantity, false)}
+  end
+
+  def handle_event("save_habit_settings", params, socket) do
+    habit_id = params["habit_id"]
+    has_quantity = params["has_quantity"] == "true"
+
+    attrs =
+      if has_quantity do
+        %{
+          has_quantity: true,
+          quantity_low: parse_int(params["quantity_low"], 1),
+          quantity_high: parse_int(params["quantity_high"], 10)
+        }
+      else
+        %{has_quantity: false}
+      end
+
+    with {:ok, habit} <- fetch_user_habit(habit_id, socket),
+         {:ok, updated_habit} <- Habits.update_habit(habit, attrs) do
+      habits =
+        Enum.map(socket.assigns.habits, fn h ->
+          if h.id == updated_habit.id do
+            %{
+              h
+              | has_quantity: updated_habit.has_quantity,
+                quantity_low: updated_habit.quantity_low,
+                quantity_high: updated_habit.quantity_high
+            }
+          else
+            h
+          end
+        end)
+
+      {:noreply,
+       socket
+       |> assign(:habits, habits)
+       |> assign(:show_settings_modal, false)
+       |> assign(:settings_habit, nil)
+       |> put_flash(:info, "Habit settings updated!")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      {:error, changeset} ->
+        errors = changeset.errors |> Enum.map(fn {field, {msg, _}} -> "#{field}: #{msg}" end)
+
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error updating settings: #{Enum.join(errors, ", ")}")}
+    end
   end
 
   @spec reset_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()

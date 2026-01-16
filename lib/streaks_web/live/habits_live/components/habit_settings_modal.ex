@@ -19,7 +19,7 @@ defmodule StreaksWeb.HabitsLive.HabitSettingsModal do
         phx-click="close_settings_modal"
       >
       </div>
-      
+
     <!-- Modal -->
       <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 max-w-md w-full p-6">
@@ -57,7 +57,7 @@ defmodule StreaksWeb.HabitsLive.HabitSettingsModal do
               class="pl-8 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
             >
               <p class="text-xs text-gray-500 dark:text-gray-500">
-                Set the range for color intensity (darker = higher value)
+                Set the range for color intensity
               </p>
               <div class="flex gap-3 items-center">
                 <div class="flex-1">

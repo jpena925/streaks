@@ -205,5 +205,12 @@
       quantity_value={@quantity_value}
       is_edit_mode={@is_edit_mode}
     />
+    
+<!-- Habit Settings Modal -->
+    <HabitSettingsModal.habit_settings_modal
+      show={@show_settings_modal}
+      habit={@settings_habit}
+      has_quantity={@settings_has_quantity}
+    />
   </div>
 </div>

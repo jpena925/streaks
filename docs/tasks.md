@@ -6,24 +6,6 @@ A curated list of improvements, learning opportunities, and feature ideas—orga
 
 ## 🔴 High Priority: Daily Pain Points
 
-These directly impact your daily experience.
-
-### 1. Edit Quantity Config for Existing Habits
-
-**Problem:** Users can set quantity range (low/high) when creating a habit, but can't edit it for existing habits.
-
-**Solution:** Add an edit modal or settings panel for habits that allows:
-
-- Editing habit name (already works inline)
-- Configuring quantity range for quantity habits
-
-**Options:**
-
-- Gear icon on habit card → opens settings modal
-- Expand the inline editing to include quantity settings
-- Add a "Configure" button that appears for quantity habits
-
----
 
 ### 2. Add "Today Mode" for 7+ Habits (UX)
 
@@ -61,15 +43,72 @@ These directly impact your daily experience.
 
 ---
 
-### ~~2. Configurable Quantity Thresholds~~ ✅ Done
+### 3. Weekly Notes with Clickable Week Numbers
 
-Added per-habit quantity range configuration:
+**Problem:** The GitHub-style contribution grid shows weeks visually but doesn't provide a way to capture weekly reflections or notes.
 
-- `quantity_low` - low end of expected range (lightest green)
-- `quantity_high` - high end of expected range (darkest green)
-- `quantity_unit` - what you're counting (shows in tooltip: "5 drinks")
+**Solution:** Add ISO week numbers at the top of each week column, clickable to open a notes modal.
 
-Works for both "good" habits (water: 1-8 glasses) and neutral tracking (drinks, cigarettes).
+**Visual mockup:**
+
+```
+       3    4    5    6    7   ← Week numbers (clickable)
+Mon   ▓▓   ▓▓   ▓▓   ░░   ░░
+Tue   ▓▓   ▓▓   ░░   ░░   ░░
+Wed   ▓▓   ▓▓   ▓▓   ░░   ░░
+Thu   ▓▓   ░░   ▓▓   ░░   ░░
+Fri   ▓▓   ▓▓   ▓▓   ░░   ░░
+Sat   ░░   ▓▓   ▓▓   ░░   ░░
+Sun   ▓▓   ▓▓   ░░   ░░   ░░
+```
+
+**Features:**
+
+- Display ISO week number at top of each column (e.g., week 3 = third week of year)
+- Click week number → opens modal for that week
+- Modal shows: week date range, text area for notes, save/cancel buttons
+- Visual indicator if notes exist (e.g., underline, dot, or different color)
+- Notes are global per week (not per-habit) for weekly reflections
+
+**Database:**
+
+```elixir
+# New migration
+create table(:weekly_notes) do
+  add :user_id, references(:users, on_delete: :delete_all), null: false
+  add :year, :integer, null: false
+  add :week_number, :integer, null: false
+  add :notes, :text
+
+  timestamps()
+end
+
+create unique_index(:weekly_notes, [:user_id, :year, :week_number])
+```
+
+**Implementation:**
+
+1. Create `Streaks.Notes` context with `WeeklyNote` schema
+2. Add week number row to contribution grid in `habit_card.ex`
+3. Create `WeeklyNoteModal` component (similar to existing `QuantityModal`)
+4. Use `Date.day_of_week/1` to get ISO week number
+5. Pass `weekly_notes` map to components (keyed by `{year, week}`)
+
+**UI considerations:**
+
+- Week numbers should be subtle but visible (smaller font, muted color)
+- Hover effect to show clickability
+- Weeks with notes could have a small dot indicator or be underlined
+- Modal should show week date range (e.g., "Week 3: Jan 13 - Jan 19, 2026")
+
+**Files to create/modify:**
+
+- `priv/repo/migrations/*_create_weekly_notes.exs` (new)
+- `lib/streaks/notes/weekly_note.ex` (new schema)
+- `lib/streaks/notes.ex` (new context)
+- `lib/streaks_web/live/habits_live/components/weekly_note_modal.ex` (new)
+- `lib/streaks_web/live/habits_live/components/habit_card.ex` (add week numbers row)
+- `lib/streaks_web/live/habits_live/index.ex` (handle modal events, load notes)
 
 ---
 
@@ -77,7 +116,7 @@ Works for both "good" habits (water: 1-8 glasses) and neutral tracking (drinks, 
 
 Make Streaks installable on your iPhone home screen.
 
-### 3. Progressive Web App (PWA) Setup
+### 4. Progressive Web App (PWA) Setup
 
 **What you get:**
 
@@ -138,7 +177,7 @@ Create `priv/static/sw.js` for offline caching. This is where you'd cache the ap
 
 ---
 
-### 4. Touch-Optimized Interactions
+### 5. Touch-Optimized Interactions
 
 **Problem:** Small 14px habit cubes are hard to tap on mobile.
 
@@ -177,7 +216,7 @@ export default {
 
 You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
-### 5. CRT/Retro Visual Effects
+### 6. CRT/Retro Visual Effects
 
 **Ideas:**
 
@@ -224,7 +263,7 @@ You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
 ---
 
-### 6. ASCII Art & Terminal Decorations
+### 7. ASCII Art & Terminal Decorations
 
 **Header example:**
 
@@ -253,7 +292,7 @@ You mentioned loving the terminal/retro vibe. Let's lean into it harder.
 
 These are overkill for a single-user app but great for learning.
 
-### 7. GenServer: Streak Calculator Cache
+### 8. GenServer: Streak Calculator Cache
 
 **The idea:** Instead of recalculating streaks on every page load, maintain a GenServer that:
 
@@ -285,7 +324,7 @@ end
 
 ---
 
-### 8. Phoenix Channels: Real-Time Sync
+### 9. Phoenix Channels: Real-Time Sync
 
 **Use case:** If you have the app open on phone AND laptop, logging a habit on one device instantly updates the other.
 
@@ -309,7 +348,7 @@ StreaksWeb.Endpoint.broadcast("user:#{user.id}", "habit_updated", %{habit_id: id
 
 ---
 
-### 9. Oban: Background Jobs
+### 10. Oban: Background Jobs
 
 **Use cases (even for single user):**
 
@@ -339,7 +378,7 @@ end
 
 ---
 
-### 10. Presence: Who's Online (for future social features)
+### 11. Presence: Who's Online (for future social features)
 
 **When you add friends:** Show who's currently active.
 
@@ -361,7 +400,7 @@ StreaksWeb.Presence.track(socket, "users:online", user.id, %{
 
 ## 👥 Social Features
 
-### 11. Public Streak Pages
+### 12. Public Streak Pages
 
 **URL:** `yourapp.com/u/username` or `yourapp.com/s/:share_token`
 
@@ -385,7 +424,7 @@ live "/s/:token", SharedStreaksLive, :show
 
 ---
 
-### 12. Accountability Partners
+### 13. Accountability Partners
 
 **Features:**
 
@@ -410,7 +449,7 @@ end
 
 ## 🏗️ Infrastructure (For Fun/Learning)
 
-### 13. ETS Caching
+### 14. ETS Caching
 
 **What:** In-memory caching without external dependencies (like Redis).
 
@@ -443,7 +482,7 @@ end
 
 ---
 
-### 14. Telemetry & Observability
+### 15. Telemetry & Observability
 
 **Add custom telemetry events:**
 
@@ -465,7 +504,7 @@ end
 
 ---
 
-### 15. Rate Limiting (for public features)
+### 16. Rate Limiting (for public features)
 
 When you add public pages/API, add rate limiting:
 
@@ -481,7 +520,7 @@ end
 
 ## 🧹 Code Quality & DX
 
-### 16. Extract Calendar Module
+### 17. Extract Calendar Module
 
 Move date/calendar logic to its own module as suggested in existing roadmap.
 
@@ -496,7 +535,7 @@ end
 
 ---
 
-### 17. Add More Typespecs
+### 18. Add More Typespecs
 
 Your existing typespecs are good. Add them to:
 
@@ -508,7 +547,7 @@ Consider enabling Dialyzer's `--strict` mode.
 
 ---
 
-### 18. Property-Based Testing
+### 19. Property-Based Testing
 
 Use StreamData for testing streak calculations:
 
@@ -530,29 +569,30 @@ end
 
 1. [x] ~~Fix slow toggle (targeted updates + N+1 fix)~~ ✅ Done
 2. [ ] Add "Today" compact view
-3. [ ] Larger touch targets on mobile
+3. [ ] Add weekly notes with clickable week numbers
 
-**Week 3-4: PWA**
+**Week 3-4: Mobile & PWA**
 
-4. [ ] Add manifest.json
-5. [ ] Add proper icons
-6. [ ] Test "Add to Home Screen" on iPhone
+4. [ ] Larger touch targets on mobile
+5. [ ] Add manifest.json
+6. [ ] Add proper icons
+7. [ ] Test "Add to Home Screen" on iPhone
 
 **Week 5-6: Aesthetic**
 
-7. [ ] Add CRT/retro effects (opt-in toggle)
-8. [ ] Experiment with ASCII borders
+8. [ ] Add CRT/retro effects (opt-in toggle)
+9. [ ] Experiment with ASCII borders
 
 **Week 7-8: Backend Learning**
 
-9. [ ] Implement GenServer streak cache
-10. [ ] Add real-time sync with Channels
+10. [ ] Implement GenServer streak cache
+11. [ ] Add real-time sync with Channels
 
 **Future: Social**
 
-11. [ ] Public profile pages
-12. [ ] Share tokens
-13. [ ] Accountability partners
+12. [ ] Public profile pages
+13. [ ] Share tokens
+14. [ ] Accountability partners
 
 ---
 

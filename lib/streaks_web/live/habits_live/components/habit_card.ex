@@ -88,14 +88,22 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </.badge>
           </div>
           
-    <!-- Archive button -->
-          <.icon_button
-            phx-click="archive_habit"
-            phx-value-id={@habit.id}
-            data-confirm="Archive this habit? You can restore it later from the archived section."
-            icon="hero-archive-box"
-            title="Archive habit"
-          />
+    <!-- Action buttons -->
+          <div class="flex items-center gap-1">
+            <.icon_button
+              phx-click="open_settings_modal"
+              phx-value-id={@habit.id}
+              icon="hero-cog-6-tooth"
+              title="Habit settings"
+            />
+            <.icon_button
+              phx-click="archive_habit"
+              phx-value-id={@habit.id}
+              data-confirm="Archive this habit? You can restore it later from the archived section."
+              icon="hero-archive-box"
+              title="Archive habit"
+            />
+          </div>
         </div>
       </div>
       

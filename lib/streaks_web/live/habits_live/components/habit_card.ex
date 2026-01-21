@@ -114,15 +114,14 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
-            <!-- Month labels - positioned relative to week grid -->
-            <div class="relative h-4 mb-1 px-2 text-xs font-medium text-gray-600 dark:text-gray-400">
-              <span
-                :for={{month, column_index} <- @months}
-                class="absolute whitespace-nowrap"
-                style={"left: calc(#{column_index} * (14px + 4px));"}
+            <!-- Month labels - uses same grid structure for perfect alignment -->
+            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+              <div
+                :for={col_index <- 0..51}
+                class="w-3.5 whitespace-nowrap overflow-visible"
               >
-                {String.split(month, " ") |> hd()}
-              </span>
+                {get_month_label_for_column(@months, col_index)}
+              </div>
             </div>
             <!-- Week numbers row - uses same grid structure as habit cubes for perfect alignment -->
             <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1">
@@ -196,5 +195,12 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       end
     end)
     |> Enum.reverse()
+  end
+
+  defp get_month_label_for_column(months, col_index) do
+    case Enum.find(months, fn {_month, index} -> index == col_index end) do
+      {month, _} -> String.split(month, " ") |> hd()
+      nil -> ""
+    end
   end
 end

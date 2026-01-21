@@ -71,7 +71,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
           />
         </div>
-
+        
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
@@ -83,13 +83,13 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-
+            
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-
+          
     <!-- Action buttons -->
           <div class="flex items-center gap-1">
             <.icon_button
@@ -108,7 +108,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
           </div>
         </div>
       </div>
-
+      
     <!-- Grid container -->
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
@@ -149,7 +149,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </div>
           </div>
         </div>
-
+        
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -187,6 +187,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     |> Enum.with_index()
     |> Enum.reduce([], fn {date, index}, acc ->
       column_index = div(index, 7)
+
       if rem(index, 7) == 0 do
         {_year, week_num} = :calendar.iso_week_number(Date.to_erl(date))
         [{week_num, column_index} | acc]

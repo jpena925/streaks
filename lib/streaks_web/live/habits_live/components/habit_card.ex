@@ -16,6 +16,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
     today = Habits.today(assigns.timezone)
+    week_numbers = get_week_numbers(habit_days)
 
     streak_dates = Enum.map(assigns.habit.completions, & &1.completed_on)
     streaks = Habits.calculate_streaks_from_dates(streak_dates, assigns.timezone)
@@ -26,6 +27,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       |> assign(:completions_map, completions_map)
       |> assign(:habit_days, habit_days)
       |> assign(:months, months)
+      |> assign(:week_numbers, week_numbers)
       |> assign(:streaks, streaks)
       |> assign(:today, today)
 
@@ -69,7 +71,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
           />
         </div>
-        
+
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
@@ -81,13 +83,13 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
+
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
+
     <!-- Action buttons -->
           <div class="flex items-center gap-1">
             <.icon_button
@@ -106,30 +108,33 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
           </div>
         </div>
       </div>
-      
+
     <!-- Grid container -->
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
-            <!-- Month labels -->
-            <div class="mb-2 sm:mb-3 text-xs font-medium text-gray-600 dark:text-gray-400">
-              <div
-                class="grid grid-flow-col gap-1"
-                style="grid-template-columns: repeat(53, 14px);"
+            <!-- Month labels - positioned relative to week grid -->
+            <div class="relative h-4 mb-1 px-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+              <span
+                :for={{month, column_index} <- @months}
+                class="absolute whitespace-nowrap"
+                style={"left: calc(#{column_index} * (14px + 4px));"}
               >
-                <span
-                  :for={{month, column_index} <- @months}
-                  style={"grid-column-start: #{column_index + 1};"}
-                  class="text-center"
-                >
-                  {String.split(month, " ") |> hd()}
-                </span>
+                {String.split(month, " ") |> hd()}
+              </span>
+            </div>
+            <!-- Week numbers row - uses same grid structure as habit cubes for perfect alignment -->
+            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1">
+              <div
+                :for={{week_num, _col_index} <- @week_numbers}
+                class="w-3.5 text-[10px] text-gray-400 dark:text-gray-500 text-center tabular-nums"
+              >
+                {week_num}
               </div>
             </div>
-            
-    <!-- Habit completion grid -->
-            <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
+            <!-- Habit completion grid -->
+            <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 px-2 pb-2">
               <HabitCube.habit_cube
                 :for={{day, _index} <- Enum.with_index(@habit_days)}
                 date={day}
@@ -145,7 +150,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -176,5 +181,20 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     habit.completions
     |> Enum.map(&{&1.completed_on, &1.quantity})
     |> Map.new()
+  end
+
+  defp get_week_numbers(days) do
+    days
+    |> Enum.with_index()
+    |> Enum.reduce([], fn {date, index}, acc ->
+      column_index = div(index, 7)
+      if rem(index, 7) == 0 do
+        {_year, week_num} = :calendar.iso_week_number(Date.to_erl(date))
+        [{week_num, column_index} | acc]
+      else
+        acc
+      end
+    end)
+    |> Enum.reverse()
   end
 end

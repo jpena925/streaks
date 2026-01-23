@@ -35,8 +35,8 @@ defmodule StreaksWeb.HabitsLive.WeeklyNoteModal do
         phx-click="close_weekly_note_modal"
       >
       </div>
-
-      <!-- Modal -->
+      
+    <!-- Modal -->
       <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 max-w-lg w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">

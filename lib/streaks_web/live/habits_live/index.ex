@@ -415,7 +415,11 @@ defmodule StreaksWeb.HabitsLive.Index do
      |> assign(:weekly_note_has_existing, false)}
   end
 
-  def handle_event("save_weekly_note", %{"year" => year, "week_number" => week, "notes" => notes}, socket) do
+  def handle_event(
+        "save_weekly_note",
+        %{"year" => year, "week_number" => week, "notes" => notes},
+        socket
+      ) do
     year = String.to_integer(year)
     week = String.to_integer(week)
 

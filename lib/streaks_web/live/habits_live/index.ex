@@ -679,7 +679,7 @@ defmodule StreaksWeb.HabitsLive.Index do
     habit_notes = Map.get(weekly_notes_by_habit, habit_id, %{})
 
     updated_habit_notes =
-      if notes == "" or notes == nil do
+      if notes == "" do
         Map.delete(habit_notes, {year, week})
       else
         Map.put(habit_notes, {year, week}, %{notes: notes})

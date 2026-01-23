@@ -6,7 +6,7 @@ defmodule Streaks.Habits do
   import Ecto.Query, warn: false
   alias Streaks.Repo
 
-  alias Streaks.Habits.{Habit, HabitCompletion}
+  alias Streaks.Habits.{Habit, HabitCompletion, WeeklyNote}
   alias Streaks.Accounts.User
 
   @default_days_back 365
@@ -436,4 +436,103 @@ defmodule Streaks.Habits do
   defp month_name(10), do: "Oct"
   defp month_name(11), do: "Nov"
   defp month_name(12), do: "Dec"
+
+  # Weekly Notes
+
+  @doc """
+  Gets a weekly note for a specific habit, year, and week number.
+  Returns nil if not found.
+  """
+  @spec get_weekly_note(Habit.t() | integer(), integer(), integer()) :: WeeklyNote.t() | nil
+  def get_weekly_note(%Habit{id: habit_id}, year, week_number) do
+    get_weekly_note(habit_id, year, week_number)
+  end
+
+  def get_weekly_note(habit_id, year, week_number) when is_integer(habit_id) do
+    WeeklyNote
+    |> where(
+      [wn],
+      wn.habit_id == ^habit_id and wn.year == ^year and wn.week_number == ^week_number
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets all weekly notes for a habit within a range of weeks.
+  Returns a map keyed by {year, week_number} for easy lookup.
+  """
+  @spec get_weekly_notes_map(Habit.t() | integer(), [{integer(), integer()}]) ::
+          %{{integer(), integer()} => WeeklyNote.t()}
+  def get_weekly_notes_map(%Habit{id: habit_id}, year_week_pairs) do
+    get_weekly_notes_map(habit_id, year_week_pairs)
+  end
+
+  def get_weekly_notes_map(habit_id, year_week_pairs) when is_integer(habit_id) do
+    WeeklyNote
+    |> where([wn], wn.habit_id == ^habit_id)
+    |> where(
+      [wn],
+      fragment(
+        "(?, ?) IN (SELECT * FROM unnest(?::int[], ?::int[]))",
+        wn.year,
+        wn.week_number,
+        ^Enum.map(year_week_pairs, &elem(&1, 0)),
+        ^Enum.map(year_week_pairs, &elem(&1, 1))
+      )
+    )
+    |> Repo.all()
+    |> Map.new(fn note -> {{note.year, note.week_number}, note} end)
+  end
+
+  @doc """
+  Creates or updates a weekly note for a habit.
+  """
+  @spec upsert_weekly_note(Habit.t() | integer(), integer(), integer(), String.t()) ::
+          {:ok, WeeklyNote.t()} | {:error, Ecto.Changeset.t()}
+  def upsert_weekly_note(%Habit{id: habit_id}, year, week_number, notes) do
+    upsert_weekly_note(habit_id, year, week_number, notes)
+  end
+
+  def upsert_weekly_note(habit_id, year, week_number, notes) when is_integer(habit_id) do
+    %WeeklyNote{habit_id: habit_id}
+    |> WeeklyNote.changeset(%{year: year, week_number: week_number, notes: notes})
+    |> Repo.insert(
+      on_conflict: {:replace, [:notes, :updated_at]},
+      conflict_target: [:habit_id, :year, :week_number]
+    )
+  end
+
+  @doc """
+  Deletes a weekly note.
+  """
+  @spec delete_weekly_note(WeeklyNote.t()) :: {:ok, WeeklyNote.t()} | {:error, Ecto.Changeset.t()}
+  def delete_weekly_note(%WeeklyNote{} = weekly_note) do
+    Repo.delete(weekly_note)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking weekly note changes.
+  """
+  @spec change_weekly_note(WeeklyNote.t(), map()) :: Ecto.Changeset.t()
+  def change_weekly_note(%WeeklyNote{} = weekly_note, attrs \\ %{}) do
+    WeeklyNote.changeset(weekly_note, attrs)
+  end
+
+  @doc """
+  Gets the date range for an ISO week.
+  Returns {start_date, end_date} where start is Monday and end is Sunday.
+  """
+  @spec week_date_range(integer(), integer()) :: {Date.t(), Date.t()}
+  def week_date_range(year, week_number) do
+    # randomly ISO week 1 is the week with the first Thursday of the year
+    jan_4 = Date.new!(year, 1, 4)
+    jan_4_day_of_week = Date.day_of_week(jan_4)
+
+    week_1_monday = Date.add(jan_4, 1 - jan_4_day_of_week)
+
+    week_monday = Date.add(week_1_monday, (week_number - 1) * 7)
+    week_sunday = Date.add(week_monday, 6)
+
+    {week_monday, week_sunday}
+  end
 end

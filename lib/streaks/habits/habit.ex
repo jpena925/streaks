@@ -3,7 +3,7 @@ defmodule Streaks.Habits.Habit do
   import Ecto.Changeset
 
   alias Streaks.Accounts.User
-  alias Streaks.Habits.HabitCompletion
+  alias Streaks.Habits.{HabitCompletion, WeeklyNote}
 
   @type t :: %__MODULE__{
           id: integer() | nil,
@@ -30,6 +30,7 @@ defmodule Streaks.Habits.Habit do
 
     belongs_to :user, User
     has_many :completions, HabitCompletion, on_delete: :delete_all
+    has_many :weekly_notes, WeeklyNote, on_delete: :delete_all
 
     timestamps(type: :utc_datetime)
   end

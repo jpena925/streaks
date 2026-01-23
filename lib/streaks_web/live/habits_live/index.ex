@@ -6,6 +6,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   alias StreaksWeb.HabitsLive.HabitCard
   alias StreaksWeb.HabitsLive.HabitSettingsModal
   alias StreaksWeb.HabitsLive.QuantityModal
+  alias StreaksWeb.HabitsLive.WeeklyNoteModal
 
   def mount(_params, _session, socket) do
     socket =
@@ -22,6 +23,13 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:show_settings_modal, false)
       |> assign(:settings_habit, nil)
       |> assign(:settings_has_quantity, false)
+      |> assign(:show_weekly_note_modal, false)
+      |> assign(:weekly_note_habit_id, nil)
+      |> assign(:weekly_note_year, nil)
+      |> assign(:weekly_note_week, nil)
+      |> assign(:weekly_note_text, "")
+      |> assign(:weekly_note_has_existing, false)
+      |> assign(:weekly_notes_by_habit, %{})
       |> assign_new_habit_form()
 
     socket =
@@ -29,11 +37,13 @@ defmodule StreaksWeb.HabitsLive.Index do
         time_zone = get_connect_params(socket)["timeZone"] || "UTC"
         habits = Habits.list_habits(socket.assigns.current_scope.user)
         archived_habits = Habits.list_archived_habits(socket.assigns.current_scope.user)
+        weekly_notes_by_habit = load_weekly_notes_for_habits(habits, time_zone)
 
         socket
         |> assign(:timezone, time_zone)
         |> assign(:habits, habits)
         |> assign(:archived_habits, archived_habits)
+        |> assign(:weekly_notes_by_habit, weekly_notes_by_habit)
         |> assign(:loading, false)
       else
         socket
@@ -373,6 +383,107 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  def handle_event(
+        "open_weekly_note_modal",
+        %{"habit_id" => habit_id, "year" => year, "week" => week},
+        socket
+      ) do
+    year = String.to_integer(year)
+    week = String.to_integer(week)
+    habit_id_int = String.to_integer(habit_id)
+
+    existing_note = Habits.get_weekly_note(habit_id_int, year, week)
+
+    {:noreply,
+     socket
+     |> assign(:show_weekly_note_modal, true)
+     |> assign(:weekly_note_habit_id, habit_id)
+     |> assign(:weekly_note_year, year)
+     |> assign(:weekly_note_week, week)
+     |> assign(:weekly_note_text, if(existing_note, do: existing_note.notes || "", else: ""))
+     |> assign(:weekly_note_has_existing, existing_note != nil)}
+  end
+
+  def handle_event("close_weekly_note_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_weekly_note_modal, false)
+     |> assign(:weekly_note_habit_id, nil)
+     |> assign(:weekly_note_year, nil)
+     |> assign(:weekly_note_week, nil)
+     |> assign(:weekly_note_text, "")
+     |> assign(:weekly_note_has_existing, false)}
+  end
+
+  def handle_event("save_weekly_note", %{"year" => year, "week_number" => week, "notes" => notes}, socket) do
+    year = String.to_integer(year)
+    week = String.to_integer(week)
+
+    with {:ok, habit} <- fetch_user_habit(socket.assigns.weekly_note_habit_id, socket),
+         {:ok, _note} <- Habits.upsert_weekly_note(habit, year, week, notes) do
+      weekly_notes_by_habit =
+        update_weekly_notes_cache(
+          socket.assigns.weekly_notes_by_habit,
+          habit.id,
+          year,
+          week,
+          notes
+        )
+
+      {:noreply,
+       socket
+       |> assign(:weekly_notes_by_habit, weekly_notes_by_habit)
+       |> assign(:show_weekly_note_modal, false)
+       |> assign(:weekly_note_habit_id, nil)
+       |> assign(:weekly_note_year, nil)
+       |> assign(:weekly_note_week, nil)
+       |> assign(:weekly_note_text, "")
+       |> assign(:weekly_note_has_existing, false)
+       |> put_flash(:info, "Note saved!")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Error saving note")}
+    end
+  end
+
+  def handle_event("delete_weekly_note", _params, socket) do
+    year = socket.assigns.weekly_note_year
+    week = socket.assigns.weekly_note_week
+
+    with {:ok, habit} <- fetch_user_habit(socket.assigns.weekly_note_habit_id, socket),
+         note <- Habits.get_weekly_note(habit, year, week),
+         true <- note != nil,
+         {:ok, _} <- Habits.delete_weekly_note(note) do
+      weekly_notes_by_habit =
+        remove_from_weekly_notes_cache(
+          socket.assigns.weekly_notes_by_habit,
+          habit.id,
+          year,
+          week
+        )
+
+      {:noreply,
+       socket
+       |> assign(:weekly_notes_by_habit, weekly_notes_by_habit)
+       |> assign(:show_weekly_note_modal, false)
+       |> assign(:weekly_note_habit_id, nil)
+       |> assign(:weekly_note_year, nil)
+       |> assign(:weekly_note_week, nil)
+       |> assign(:weekly_note_text, "")
+       |> assign(:weekly_note_has_existing, false)
+       |> put_flash(:info, "Note deleted!")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Error deleting note")}
+    end
+  end
+
   @spec reset_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   defp reset_new_habit_form(socket) do
     socket
@@ -534,5 +645,48 @@ defmodule StreaksWeb.HabitsLive.Index do
       {int, _} -> int
       :error -> default
     end
+  end
+
+  defp load_weekly_notes_for_habits(habits, timezone) do
+    # Get the year/week pairs for visible weeks (last 52 weeks)
+    year_week_pairs = get_visible_year_week_pairs(timezone)
+
+    habits
+    |> Enum.map(fn habit ->
+      notes_map = Habits.get_weekly_notes_map(habit.id, year_week_pairs)
+      {habit.id, notes_map}
+    end)
+    |> Map.new()
+  end
+
+  defp get_visible_year_week_pairs(timezone) do
+    today = Habits.today(timezone)
+
+    # Get dates for the last 52 weeks (matching the grid display)
+    0..51
+    |> Enum.map(fn weeks_ago ->
+      date = Date.add(today, -weeks_ago * 7)
+      :calendar.iso_week_number(Date.to_erl(date))
+    end)
+    |> Enum.uniq()
+  end
+
+  defp update_weekly_notes_cache(weekly_notes_by_habit, habit_id, year, week, notes) do
+    habit_notes = Map.get(weekly_notes_by_habit, habit_id, %{})
+
+    updated_habit_notes =
+      if notes == "" or notes == nil do
+        Map.delete(habit_notes, {year, week})
+      else
+        Map.put(habit_notes, {year, week}, %{notes: notes})
+      end
+
+    Map.put(weekly_notes_by_habit, habit_id, updated_habit_notes)
+  end
+
+  defp remove_from_weekly_notes_cache(weekly_notes_by_habit, habit_id, year, week) do
+    habit_notes = Map.get(weekly_notes_by_habit, habit_id, %{})
+    updated_habit_notes = Map.delete(habit_notes, {year, week})
+    Map.put(weekly_notes_by_habit, habit_id, updated_habit_notes)
   end
 end

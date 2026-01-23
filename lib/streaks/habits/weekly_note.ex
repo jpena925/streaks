@@ -4,6 +4,17 @@ defmodule Streaks.Habits.WeeklyNote do
 
   alias Streaks.Habits.Habit
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          year: integer() | nil,
+          week_number: integer() | nil,
+          notes: String.t() | nil,
+          habit_id: integer() | nil,
+          habit: Habit.t() | Ecto.Association.NotLoaded.t(),
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "weekly_notes" do
     field :year, :integer
     field :week_number, :integer

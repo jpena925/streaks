@@ -640,4 +640,176 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       assert hd(other_habits).id == other_habit.id
     end
   end
+
+  describe "weekly notes modal" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      habit = habit_fixture(user, %{name: "Test Habit"})
+      %{conn: log_in_user(conn, user), user: user, habit: habit}
+    end
+
+    test "opens weekly note modal when clicking a week number", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      html =
+        lv
+        |> element(
+          "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+        )
+        |> render_click()
+
+      assert html =~ "Week #{week} Notes"
+      assert html =~ "Save"
+      assert html =~ "Cancel"
+    end
+
+    test "closes weekly note modal with cancel button", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      lv
+      |> element(
+        "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> element("button[phx-click='close_weekly_note_modal']")
+        |> render_click()
+
+      refute html =~ "Week #{week} Notes"
+    end
+
+    test "closes weekly note modal with escape key", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      lv
+      |> element(
+        "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> element("div[phx-window-keydown='close_weekly_note_modal']")
+        |> render_keydown(%{"key" => "Escape"})
+
+      refute html =~ "Week #{week} Notes"
+    end
+
+    test "saves a new weekly note", %{conn: conn, habit: habit} do
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      lv
+      |> element(
+        "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='save_weekly_note']", %{
+          "year" => to_string(year),
+          "week_number" => to_string(week),
+          "notes" => "This was a productive week!"
+        })
+        |> render_submit()
+
+      refute html =~ "Week #{week} Notes"
+
+      # Verify the note was saved
+      saved_note = Habits.get_weekly_note(habit, year, week)
+      assert saved_note.notes == "This was a productive week!"
+    end
+
+    test "shows existing note in modal when editing", %{conn: conn, habit: habit} do
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+      _note = weekly_note_fixture(habit, %{year: year, week_number: week, notes: "Existing note"})
+
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      html =
+        lv
+        |> element(
+          "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+        )
+        |> render_click()
+
+      assert html =~ "Existing note"
+      assert html =~ "Delete Note"
+    end
+
+    test "updates an existing note", %{conn: conn, habit: habit} do
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+      _note = weekly_note_fixture(habit, %{year: year, week_number: week, notes: "Original note"})
+
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element(
+        "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> form("form[phx-submit='save_weekly_note']", %{
+          "year" => to_string(year),
+          "week_number" => to_string(week),
+          "notes" => "Updated note"
+        })
+        |> render_submit()
+
+      refute html =~ "Week #{week} Notes"
+
+      updated_note = Habits.get_weekly_note(habit, year, week)
+      assert updated_note.notes == "Updated note"
+    end
+
+    test "deletes an existing note", %{conn: conn, habit: habit} do
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      _note =
+        weekly_note_fixture(habit, %{year: year, week_number: week, notes: "Note to delete"})
+
+      {:ok, lv, _html} = live(conn, ~p"/streaks")
+
+      lv
+      |> element(
+        "button[phx-click='open_weekly_note_modal'][phx-value-habit_id='#{habit.id}'][phx-value-year='#{year}'][phx-value-week='#{week}']"
+      )
+      |> render_click()
+
+      html =
+        lv
+        |> element("button[phx-click='delete_weekly_note']")
+        |> render_click()
+
+      # Modal should close after delete
+      refute html =~ "Week #{week} Notes"
+
+      assert Habits.get_weekly_note(habit, year, week) == nil
+    end
+
+    test "week numbers are clickable buttons", %{conn: conn, habit: habit} do
+      {:ok, _lv, html} = live(conn, ~p"/streaks")
+
+      {year, week} = :calendar.iso_week_number(Date.to_erl(Date.utc_today()))
+
+      assert html =~
+               ~s(phx-click="open_weekly_note_modal")
+
+      assert html =~ ~s(phx-value-habit_id="#{habit.id}")
+      assert html =~ ~s(phx-value-year="#{year}")
+      assert html =~ ~s(phx-value-week="#{week}")
+    end
+  end
 end

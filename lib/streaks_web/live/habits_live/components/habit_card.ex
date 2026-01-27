@@ -9,6 +9,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
   attr :timezone, :string, required: true
   attr :is_first, :boolean, default: false
   attr :is_last, :boolean, default: false
+  attr :weekly_notes_map, :map, default: %{}
 
   def habit_card(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
@@ -16,6 +17,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
     today = Habits.today(assigns.timezone)
+    week_numbers = get_week_numbers(habit_days)
 
     streak_dates = Enum.map(assigns.habit.completions, & &1.completed_on)
     streaks = Habits.calculate_streaks_from_dates(streak_dates, assigns.timezone)
@@ -26,6 +28,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       |> assign(:completions_map, completions_map)
       |> assign(:habit_days, habit_days)
       |> assign(:months, months)
+      |> assign(:week_numbers, week_numbers)
       |> assign(:streaks, streaks)
       |> assign(:today, today)
 
@@ -112,24 +115,43 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
-            <!-- Month labels -->
-            <div class="mb-2 sm:mb-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+            <!-- Month labels - uses same grid structure for perfect alignment -->
+            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
               <div
-                class="grid grid-flow-col gap-1"
-                style="grid-template-columns: repeat(53, 14px);"
+                :for={col_index <- 0..51}
+                class="w-3.5 whitespace-nowrap overflow-visible"
               >
-                <span
-                  :for={{month, column_index} <- @months}
-                  style={"grid-column-start: #{column_index + 1};"}
-                  class="text-center"
-                >
-                  {String.split(month, " ") |> hd()}
-                </span>
+                {get_month_label_for_column(@months, col_index)}
               </div>
             </div>
-            
-    <!-- Habit completion grid -->
-            <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 p-2">
+            <!-- Week numbers row - clickable for notes -->
+            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1">
+              <button
+                :for={{year, week_num, _col_index} <- @week_numbers}
+                type="button"
+                phx-click="open_weekly_note_modal"
+                phx-value-habit_id={@habit.id}
+                phx-value-year={year}
+                phx-value-week={week_num}
+                class={[
+                  "w-3.5 text-[10px] text-center tabular-nums transition-colors cursor-pointer",
+                  "hover:text-green-600 dark:hover:text-green-400",
+                  if(Map.has_key?(@weekly_notes_map, {year, week_num}),
+                    do: "text-green-600 dark:text-green-400 font-semibold",
+                    else: "text-gray-400 dark:text-gray-500"
+                  )
+                ]}
+                title={
+                  if Map.has_key?(@weekly_notes_map, {year, week_num}),
+                    do: "View/edit note for week #{week_num}",
+                    else: "Add note for week #{week_num}"
+                }
+              >
+                {week_num}
+              </button>
+            </div>
+            <!-- Habit completion grid -->
+            <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 px-2 pb-2">
               <HabitCube.habit_cube
                 :for={{day, _index} <- Enum.with_index(@habit_days)}
                 date={day}
@@ -176,5 +198,28 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     habit.completions
     |> Enum.map(&{&1.completed_on, &1.quantity})
     |> Map.new()
+  end
+
+  defp get_week_numbers(days) do
+    days
+    |> Enum.with_index()
+    |> Enum.reduce([], fn {date, index}, acc ->
+      column_index = div(index, 7)
+
+      if rem(index, 7) == 0 do
+        {year, week_num} = :calendar.iso_week_number(Date.to_erl(date))
+        [{year, week_num, column_index} | acc]
+      else
+        acc
+      end
+    end)
+    |> Enum.reverse()
+  end
+
+  defp get_month_label_for_column(months, col_index) do
+    case Enum.find(months, fn {_month, index} -> index == col_index end) do
+      {month, _} -> String.split(month, " ") |> hd()
+      nil -> ""
+    end
   end
 end

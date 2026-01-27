@@ -140,6 +140,7 @@
         timezone={@timezone}
         is_first={index == 0}
         is_last={index == length(@habits) - 1}
+        weekly_notes_map={Map.get(@weekly_notes_by_habit, habit.id, %{})}
       />
     </div>
 
@@ -211,6 +212,15 @@
       show={@show_settings_modal}
       habit={@settings_habit}
       has_quantity={@settings_has_quantity}
+    />
+    
+<!-- Weekly Note Modal -->
+    <WeeklyNoteModal.weekly_note_modal
+      show={@show_weekly_note_modal}
+      year={@weekly_note_year}
+      week_number={@weekly_note_week}
+      notes={@weekly_note_text}
+      has_existing_note={@weekly_note_has_existing}
     />
   </div>
 </div>

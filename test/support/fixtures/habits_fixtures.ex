@@ -40,4 +40,23 @@ defmodule Streaks.HabitsFixtures do
 
     Habits.get_habit(habit.id, user)
   end
+
+  def weekly_note_fixture(habit, attrs \\ %{}) do
+    valid_attrs =
+      Enum.into(attrs, %{
+        year: Date.utc_today().year,
+        week_number: elem(:calendar.iso_week_number(Date.to_erl(Date.utc_today())), 1),
+        notes: "Test note #{System.unique_integer()}"
+      })
+
+    {:ok, note} =
+      Habits.upsert_weekly_note(
+        habit,
+        valid_attrs.year,
+        valid_attrs.week_number,
+        valid_attrs.notes
+      )
+
+    note
+  end
 end

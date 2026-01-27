@@ -5,7 +5,7 @@ defmodule Streaks.HabitsTest do
   import Streaks.HabitsFixtures
 
   alias Streaks.Habits
-  alias Streaks.Habits.HabitCompletion
+  alias Streaks.Habits.{HabitCompletion, WeeklyNote}
 
   describe "list_habits/1" do
     test "lists habits for a user" do
@@ -503,6 +503,197 @@ defmodule Streaks.HabitsTest do
       habit = habit_fixture(user)
 
       assert Habits.get_completion(habit, "invalid") == nil
+    end
+  end
+
+  describe "get_weekly_note/3" do
+    test "gets a weekly note for habit, year, and week" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      note = weekly_note_fixture(habit, %{year: 2026, week_number: 4, notes: "Test note"})
+
+      fetched_note = Habits.get_weekly_note(habit, 2026, 4)
+
+      assert fetched_note.id == note.id
+      assert fetched_note.notes == "Test note"
+    end
+
+    test "returns nil if no note exists" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      assert Habits.get_weekly_note(habit, 2026, 4) == nil
+    end
+
+    test "returns nil for different habit" do
+      user = user_fixture()
+      habit1 = habit_fixture(user)
+      habit2 = habit_fixture(user)
+      _note = weekly_note_fixture(habit1, %{year: 2026, week_number: 4})
+
+      assert Habits.get_weekly_note(habit2, 2026, 4) == nil
+    end
+
+    test "accepts habit_id as integer" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      note = weekly_note_fixture(habit, %{year: 2026, week_number: 4})
+
+      fetched_note = Habits.get_weekly_note(habit.id, 2026, 4)
+
+      assert fetched_note.id == note.id
+    end
+  end
+
+  describe "get_weekly_notes_map/2" do
+    test "returns map of notes keyed by {year, week}" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      note1 = weekly_note_fixture(habit, %{year: 2026, week_number: 4, notes: "Week 4"})
+      note2 = weekly_note_fixture(habit, %{year: 2026, week_number: 5, notes: "Week 5"})
+
+      year_week_pairs = [{2026, 4}, {2026, 5}, {2026, 6}]
+      notes_map = Habits.get_weekly_notes_map(habit, year_week_pairs)
+
+      assert Map.has_key?(notes_map, {2026, 4})
+      assert Map.has_key?(notes_map, {2026, 5})
+      refute Map.has_key?(notes_map, {2026, 6})
+
+      assert notes_map[{2026, 4}].id == note1.id
+      assert notes_map[{2026, 5}].id == note2.id
+    end
+
+    test "returns empty map when no notes exist" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      year_week_pairs = [{2026, 4}, {2026, 5}]
+      notes_map = Habits.get_weekly_notes_map(habit, year_week_pairs)
+
+      assert notes_map == %{}
+    end
+
+    test "only returns notes for specified weeks" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      _note1 = weekly_note_fixture(habit, %{year: 2026, week_number: 4})
+      _note2 = weekly_note_fixture(habit, %{year: 2026, week_number: 10})
+
+      year_week_pairs = [{2026, 4}]
+      notes_map = Habits.get_weekly_notes_map(habit, year_week_pairs)
+
+      assert Map.has_key?(notes_map, {2026, 4})
+      refute Map.has_key?(notes_map, {2026, 10})
+    end
+  end
+
+  describe "upsert_weekly_note/4" do
+    test "creates a new weekly note" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      {:ok, note} = Habits.upsert_weekly_note(habit, 2026, 4, "My weekly note")
+
+      assert note.habit_id == habit.id
+      assert note.year == 2026
+      assert note.week_number == 4
+      assert note.notes == "My weekly note"
+    end
+
+    test "updates existing note on conflict" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      {:ok, note1} = Habits.upsert_weekly_note(habit, 2026, 4, "Original note")
+      {:ok, note2} = Habits.upsert_weekly_note(habit, 2026, 4, "Updated note")
+
+      assert note1.id == note2.id
+      assert note2.notes == "Updated note"
+    end
+
+    test "converts empty string notes to nil" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      {:ok, note} = Habits.upsert_weekly_note(habit, 2026, 4, "")
+
+      assert note.notes == nil
+    end
+
+    test "validates year range" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      {:error, changeset} = Habits.upsert_weekly_note(habit, 1999, 4, "Note")
+      assert %{year: ["must be greater than 2000"]} = errors_on(changeset)
+
+      {:error, changeset} = Habits.upsert_weekly_note(habit, 3001, 4, "Note")
+      assert %{year: ["must be less than 3000"]} = errors_on(changeset)
+    end
+
+    test "validates week_number range" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+
+      {:error, changeset} = Habits.upsert_weekly_note(habit, 2026, 0, "Note")
+      assert %{week_number: ["must be greater than or equal to 1"]} = errors_on(changeset)
+
+      {:error, changeset} = Habits.upsert_weekly_note(habit, 2026, 54, "Note")
+      assert %{week_number: ["must be less than or equal to 53"]} = errors_on(changeset)
+    end
+  end
+
+  describe "delete_weekly_note/1" do
+    test "deletes a weekly note" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      note = weekly_note_fixture(habit, %{year: 2026, week_number: 4})
+
+      {:ok, deleted_note} = Habits.delete_weekly_note(note)
+
+      assert deleted_note.id == note.id
+      assert Habits.get_weekly_note(habit, 2026, 4) == nil
+    end
+  end
+
+  describe "week_date_range/2" do
+    test "returns Monday to Sunday for a given week" do
+      {start_date, end_date} = Habits.week_date_range(2026, 4)
+
+      # Week 4 of 2026 is Jan 19-25
+      assert start_date == ~D[2026-01-19]
+      assert end_date == ~D[2026-01-25]
+
+      # Verify it's Monday to Sunday
+      assert Date.day_of_week(start_date) == 1
+      assert Date.day_of_week(end_date) == 7
+    end
+
+    test "handles week 1 correctly" do
+      {start_date, end_date} = Habits.week_date_range(2026, 1)
+
+      assert start_date == ~D[2025-12-29]
+      assert end_date == ~D[2026-01-04]
+    end
+
+    test "handles week 52/53 correctly" do
+      {start_date, end_date} = Habits.week_date_range(2026, 52)
+
+      assert Date.day_of_week(start_date) == 1
+      assert Date.day_of_week(end_date) == 7
+      assert Date.diff(end_date, start_date) == 6
+    end
+  end
+
+  describe "weekly notes cascade delete" do
+    test "deletes weekly notes when habit is deleted" do
+      user = user_fixture()
+      habit = habit_fixture(user)
+      note = weekly_note_fixture(habit, %{year: 2026, week_number: 4})
+
+      {:ok, _deleted_habit} = Habits.delete_habit(habit)
+
+      assert Repo.get(WeeklyNote, note.id) == nil
     end
   end
 end

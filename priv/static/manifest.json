@@ -1,7 +1,7 @@
 {
   "name": "Streaks",
   "short_name": "Streaks",
-  "description": "Track your habits",
+  "description": "Tracks habits and build streaks",
   "start_url": "/streaks",
   "display": "standalone",
   "background_color": "#000000",

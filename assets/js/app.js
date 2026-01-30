@@ -55,6 +55,19 @@ liveSocket.connect();
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
 
+if ("serviceWorker" in navigator) {
+	window.addEventListener("load", () => {
+		navigator.serviceWorker
+			.register("/sw.js")
+			.then((reg) => {
+				console.log("[SW] Registered:", reg.scope);
+			})
+			.catch((err) => {
+				console.log("[SW] Registration failed:", err);
+			});
+	});
+}
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //

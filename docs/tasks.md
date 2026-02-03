@@ -2,40 +2,6 @@
 
 A curated list of improvements, learning opportunities, and feature ideas—organized by priority and complexity.
 
-
-### 5. Touch-Optimized Interactions
-
-**Problem:** Small 14px habit cubes are hard to tap on mobile.
-
-**Solutions:**
-
-- Increase cube size on mobile: `w-5 h-5 sm:w-3.5 sm:h-3.5`
-- Add haptic feedback via JS: `navigator.vibrate(10)`
-- Long-press to edit quantity (instead of modal)
-- Swipe gestures for quick actions
-
-**Create a touch hook:**
-
-```javascript
-// assets/js/hooks/touch.js
-export default {
-	mounted() {
-		let longPressTimer;
-
-		this.el.addEventListener("touchstart", (e) => {
-			longPressTimer = setTimeout(() => {
-				this.pushEvent("long_press", { id: this.el.dataset.id });
-				navigator.vibrate?.(50);
-			}, 500);
-		});
-
-		this.el.addEventListener("touchend", () => {
-			clearTimeout(longPressTimer);
-		});
-	},
-};
-```
-
 ---
 
 ## 🎨 Retro Terminal Aesthetic

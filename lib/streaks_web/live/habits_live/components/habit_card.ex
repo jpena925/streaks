@@ -116,16 +116,16 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
             <!-- Month labels - uses same grid structure for perfect alignment -->
-            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+            <div class="grid grid-flow-col grid-rows-1 gap-1.5 sm:gap-1.5 px-2 mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
               <div
                 :for={col_index <- 0..51}
-                class="w-3.5 whitespace-nowrap overflow-visible"
+                class="w-5 sm:w-3.5 whitespace-nowrap overflow-visible"
               >
                 {get_month_label_for_column(@months, col_index)}
               </div>
             </div>
             <!-- Week numbers row - clickable for notes -->
-            <div class="grid grid-flow-col grid-rows-1 gap-1 sm:gap-1.5 px-2 mb-1">
+            <div class="grid grid-flow-col grid-rows-1 gap-1.5 sm:gap-1.5 px-2 mb-1">
               <button
                 :for={{year, week_num, _col_index} <- @week_numbers}
                 type="button"
@@ -134,7 +134,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
                 phx-value-year={year}
                 phx-value-week={week_num}
                 class={[
-                  "w-3.5 text-[10px] text-center tabular-nums transition-colors cursor-pointer",
+                  "w-5 sm:w-3.5 text-[10px] sm:text-[10px] text-center tabular-nums transition-colors cursor-pointer touch-manipulation",
                   "hover:text-green-600 dark:hover:text-green-400",
                   if(Map.has_key?(@weekly_notes_map, {year, week_num}),
                     do: "text-green-600 dark:text-green-400 font-semibold",
@@ -151,7 +151,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
               </button>
             </div>
             <!-- Habit completion grid -->
-            <div class="grid grid-flow-col grid-rows-7 gap-1 sm:gap-1.5 px-2 pb-2">
+            <div class="grid grid-flow-col grid-rows-7 gap-1.5 sm:gap-1.5 px-2 pb-2">
               <HabitCube.habit_cube
                 :for={{day, _index} <- Enum.with_index(@habit_days)}
                 date={day}

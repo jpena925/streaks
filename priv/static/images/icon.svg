@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Pixel grid icon for PWA - represents habit streaks -->
+  <rect width="512" height="512" fill="#000"/>
+  
+  <!-- 3x3 pixel grid with some filled (green) representing completions -->
+  <!-- Row 1 -->
+  <rect x="64" y="64" width="96" height="96" fill="#374151"/>
+  <rect x="208" y="64" width="96" height="96" fill="#374151"/>
+  <rect x="352" y="64" width="96" height="96" fill="#22c55e"/>
+  
+  <!-- Row 2 -->
+  <rect x="64" y="208" width="96" height="96" fill="#374151"/>
+  <rect x="208" y="208" width="96" height="96" fill="#22c55e"/>
+  <rect x="352" y="208" width="96" height="96" fill="#22c55e"/>
+  
+  <!-- Row 3 -->
+  <rect x="64" y="352" width="96" height="96" fill="#22c55e"/>
+  <rect x="208" y="352" width="96" height="96" fill="#22c55e"/>
+  <rect x="352" y="352" width="96" height="96" fill="#374151"/>
+</svg>

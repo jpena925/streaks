@@ -1,13 +1,19 @@
 {
   "name": "Streaks",
   "short_name": "Streaks",
-  "description": "Tracks habits and build streaks",
+  "description": "Track habits and build streaks",
   "start_url": "/streaks",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
+    {
+      "src": "/images/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/images/icon-192.png",
       "sizes": "192x192",

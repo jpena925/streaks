@@ -6,15 +6,17 @@
 @source "../js";
 @source "../../lib/streaks_web";
 
-/* Custom font configuration */
+/* Custom font configuration - VT323 retro terminal font */
 @theme {
-	--font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+	--font-family-mono: "VT323", ui-monospace, SFMono-Regular, Menlo,
 		Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @layer base {
 	body {
 		font-family: var(--font-family-mono);
+		font-size: 18px;
+		letter-spacing: 0.02em;
 	}
 }
 
@@ -216,18 +218,18 @@
 		0 0 20px currentColor;
 }
 
-/* Streak badge with fire glow - uses green for active streaks */
+/* Streak badge with fire glow - orange for that fiery look */
 .streak-badge-active {
 	box-shadow: 
-		0 0 6px rgba(34, 197, 94, 0.4),
-		0 0 12px rgba(34, 197, 94, 0.2);
+		0 0 6px rgba(249, 115, 22, 0.5),
+		0 0 12px rgba(249, 115, 22, 0.3);
 }
 
 [data-theme="dark"] .streak-badge-active {
 	box-shadow: 
-		0 0 8px rgba(34, 197, 94, 0.5),
-		0 0 16px rgba(34, 197, 94, 0.3),
-		0 0 24px rgba(34, 197, 94, 0.15);
+		0 0 10px rgba(249, 115, 22, 0.6),
+		0 0 20px rgba(249, 115, 22, 0.4),
+		0 0 30px rgba(249, 115, 22, 0.2);
 }
 
 /* Terminal-style blinking cursor for inputs */

@@ -134,10 +134,10 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
                 phx-value-year={year}
                 phx-value-week={week_num}
                 class={[
-                  "w-5 sm:w-3.5 text-[10px] sm:text-[10px] text-center tabular-nums transition-colors cursor-pointer touch-manipulation",
-                  "hover:text-green-600 dark:hover:text-green-400",
+                  "w-5 sm:w-3.5 text-[12px] sm:text-[11px] text-center tabular-nums transition-colors cursor-pointer touch-manipulation",
+                  "hover:text-orange-500 dark:hover:text-orange-400",
                   if(Map.has_key?(@weekly_notes_map, {year, week_num}),
-                    do: "text-green-600 dark:text-green-400 font-semibold",
+                    do: "text-orange-500 dark:text-orange-400 font-semibold",
                     else: "text-gray-400 dark:text-gray-500"
                   )
                 ]}

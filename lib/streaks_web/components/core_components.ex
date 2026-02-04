@@ -96,13 +96,13 @@ defmodule StreaksWeb.CoreComponents do
   def badge(assigns) do
     ~H"""
     <div class={[
-      "flex items-center gap-1 px-2 py-1 text-xs whitespace-nowrap rounded",
-      @variant == "success" && "bg-green-500 text-white streak-badge-active",
+      "flex items-center gap-1 px-2 py-1 text-sm whitespace-nowrap rounded",
+      @variant == "success" && "bg-orange-500 text-white streak-badge-active",
       @variant == "info" && "text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800",
       @variant == "neutral" && "text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/50",
       @class
     ]}>
-      <.icon :if={@icon} name={@icon} class="w-3 h-3" />
+      <.icon :if={@icon} name={@icon} class="w-4 h-4" />
       {render_slot(@inner_block)}
     </div>
     """

@@ -182,7 +182,7 @@ defmodule StreaksWeb.CoreComponents do
   def card(assigns) do
     ~H"""
     <div class={[
-      "bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 p-4 sm:p-6 rounded-sm",
+      "bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 p-4 sm:p-6 rounded-sm",
       @class
     ]}>
       {render_slot(@inner_block)}

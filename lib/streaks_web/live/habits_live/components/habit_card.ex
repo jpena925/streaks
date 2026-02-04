@@ -44,7 +44,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
               phx-value-id={@habit.id}
               disabled={@is_first}
               class={[
-                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition-colors",
                 @is_first && "opacity-30 cursor-not-allowed"
               ]}
               title="Move up"
@@ -56,7 +56,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
               phx-value-id={@habit.id}
               disabled={@is_last}
               class={[
-                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition-colors",
                 @is_last && "opacity-30 cursor-not-allowed"
               ]}
               title="Move down"
@@ -169,9 +169,9 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         </div>
         
     <!-- Legend -->
-        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-300">
+        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-700 dark:text-gray-300">
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-sm">
+            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-800 border border-gray-400 dark:border-gray-600 rounded-sm">
             </div>
             <span>No data</span>
           </div>
@@ -181,7 +181,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             <span>Completed</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-sm opacity-40">
+            <div class="w-3 h-3 bg-gray-200/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-sm opacity-50">
             </div>
             <span>Future</span>
           </div>

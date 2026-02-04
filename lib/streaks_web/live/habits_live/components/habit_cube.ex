@@ -29,7 +29,7 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
         "w-5 h-5 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all duration-200 relative group touch-manipulation",
         if(@is_future,
           do:
-            "bg-gray-100 dark:bg-gray-800/50 cursor-not-allowed opacity-40 border-gray-200 dark:border-gray-700",
+            "bg-gray-200/50 dark:bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-300 dark:border-gray-700",
           else: "cursor-pointer hover:opacity-80 active:scale-95"
         ),
         if(!@is_future && @completed,
@@ -42,15 +42,17 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
         ),
         if(!@is_future && !@completed,
           do:
-            "bg-gray-200 dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500",
+            "bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-gray-500 dark:hover:border-gray-500",
           else: nil
         ),
         if(@is_today && !@completed,
-          do: "ring-2 ring-orange-500 dark:ring-orange-400 ring-offset-1 dark:ring-offset-black",
+          do:
+            "ring-2 ring-orange-500 dark:ring-orange-400 ring-offset-1 ring-offset-gray-50 dark:ring-offset-black",
           else: nil
         ),
         if(@is_today && @completed,
-          do: "ring-2 ring-green-400 dark:ring-green-300 ring-offset-1 dark:ring-offset-black",
+          do:
+            "ring-2 ring-green-400 dark:ring-green-300 ring-offset-1 ring-offset-gray-50 dark:ring-offset-black",
           else: nil
         )
       ]}

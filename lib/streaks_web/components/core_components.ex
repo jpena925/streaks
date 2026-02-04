@@ -96,10 +96,10 @@ defmodule StreaksWeb.CoreComponents do
   def badge(assigns) do
     ~H"""
     <div class={[
-      "flex items-center gap-1 px-2 py-1 text-xs whitespace-nowrap",
-      @variant == "success" && "bg-green-500 text-white",
-      @variant == "info" && "text-gray-600 dark:text-gray-400",
-      @variant == "neutral" && "text-gray-500 dark:text-gray-500",
+      "flex items-center gap-1 px-2 py-1 text-xs whitespace-nowrap rounded",
+      @variant == "success" && "bg-green-500 text-white streak-badge-active",
+      @variant == "info" && "text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800",
+      @variant == "neutral" && "text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/50",
       @class
     ]}>
       <.icon :if={@icon} name={@icon} class="w-3 h-3" />
@@ -126,7 +126,7 @@ defmodule StreaksWeb.CoreComponents do
     ~H"""
     <button
       class={[
-        "inline-flex items-center justify-center gap-2 border border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 hover:bg-gray-900 hover:text-white dark:hover:bg-gray-100 dark:hover:text-gray-900 px-4 py-2 transition-colors duration-200",
+        "inline-flex items-center justify-center gap-2 border border-gray-900 dark:border-green-500 text-gray-900 dark:text-green-400 hover:bg-gray-900 hover:text-white dark:hover:bg-green-500/20 dark:hover:text-green-300 dark:hover:border-green-400 px-4 py-2 transition-all duration-200 rounded-sm",
         @class
       ]}
       {@rest}
@@ -182,7 +182,7 @@ defmodule StreaksWeb.CoreComponents do
   def card(assigns) do
     ~H"""
     <div class={[
-      "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 sm:p-6",
+      "bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 p-4 sm:p-6 rounded-sm",
       @class
     ]}>
       {render_slot(@inner_block)}

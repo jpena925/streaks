@@ -111,7 +111,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       </div>
       
     <!-- Grid container -->
-      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div class="overflow-x-auto pb-2">
           <div class="inline-block min-w-full">
@@ -169,17 +169,20 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         </div>
         
     <!-- Legend -->
-        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
+        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-300">
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-sm"></div>
+            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-sm">
+            </div>
             <span>No data</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-green-500 rounded-sm"></div>
+            <div class="w-3 h-3 bg-green-500 border border-green-600 dark:border-green-400 rounded-sm habit-cube-complete">
+            </div>
             <span>Completed</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded-sm opacity-40"></div>
+            <div class="w-3 h-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-sm opacity-40">
+            </div>
             <span>Future</span>
           </div>
         </div>

@@ -22,6 +22,9 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     streak_dates = Enum.map(assigns.habit.completions, & &1.completed_on)
     streaks = Habits.calculate_streaks_from_dates(streak_dates, assigns.timezone)
 
+    total_weeks = length(week_numbers)
+    current_week_index = find_current_week_index(habit_days, today)
+
     assigns =
       assigns
       |> assign(:completion_dates, completion_dates)
@@ -31,6 +34,8 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       |> assign(:week_numbers, week_numbers)
       |> assign(:streaks, streaks)
       |> assign(:today, today)
+      |> assign(:total_weeks, total_weeks)
+      |> assign(:current_week_index, current_week_index)
 
     ~H"""
     <.card>
@@ -72,7 +77,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
           />
         </div>
-        
+
     <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
@@ -84,13 +89,13 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
+
     <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
+
     <!-- Action buttons -->
           <div class="flex items-center gap-1">
             <.icon_button
@@ -109,11 +114,17 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
           </div>
         </div>
       </div>
-      
+
     <!-- Grid container -->
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
-        <div class="overflow-x-auto pb-2">
+        <div
+          id={"habit-grid-scroll-#{@habit.id}"}
+          class="overflow-x-auto pb-2"
+          phx-hook="ScrollToToday"
+          data-total-weeks={@total_weeks}
+          data-current-week-index={@current_week_index}
+        >
           <div class="inline-block min-w-full">
             <!-- Month labels - uses same grid structure for perfect alignment -->
             <div class="grid grid-flow-col grid-rows-1 gap-1.5 sm:gap-1.5 px-2 mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
@@ -167,7 +178,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </div>
           </div>
         </div>
-        
+
     <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -220,6 +231,23 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     case Enum.find(months, fn {_month, index} -> index == col_index end) do
       {month, _} -> String.split(month, " ") |> hd()
       nil -> ""
+    end
+  end
+
+  defp find_current_week_index(habit_days, today) do
+    case Enum.find_index(habit_days, fn day -> day == today end) do
+      nil ->
+        habit_days
+        |> Enum.with_index()
+        |> Enum.filter(fn {day, _idx} -> Date.compare(day, today) != :gt end)
+        |> List.last()
+        |> case do
+          nil -> 0
+          {_day, idx} -> div(idx, 7)
+        end
+
+      idx ->
+        div(idx, 7)
     end
   end
 end

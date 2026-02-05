@@ -26,12 +26,12 @@ import { hooks as colocatedHooks } from "phoenix-colocated/streaks";
 import topbar from "../vendor/topbar";
 import Tooltip from "./hooks/tooltip";
 import ThemeSelector from "./hooks/theme-selector";
-import Touch from "./hooks/touch";
+import ScrollToToday from "./hooks/scroll-to-today";
 
 let Hooks = {};
 Hooks.Tooltip = Tooltip;
 Hooks.ThemeSelector = ThemeSelector;
-Hooks.Touch = Touch;
+Hooks.ScrollToToday = ScrollToToday;
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")

@@ -53,18 +53,12 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
       }
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
-      phx-hook={get_hook(@is_future, @quantity, @completed)}
+      phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}
       data-tooltip-text={if(@quantity && @completed, do: "#{@quantity}", else: nil)}
-      data-habit-id={@habit_id}
-      data-date={Date.to_iso8601(@date)}
     >
     </div>
     """
   end
-
-  defp get_hook(true, _quantity, _completed), do: nil
-  defp get_hook(_is_future, quantity, true) when not is_nil(quantity), do: "Tooltip"
-  defp get_hook(_is_future, _quantity, _completed), do: "Touch"
 
   defp quantity_intensity_class(nil, _low, _high) do
     "bg-green-500 border-transparent shadow-sm"

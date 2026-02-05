@@ -34,6 +34,12 @@ export default {
 			tooltip.classList.remove("opacity-100");
 			tooltip.classList.add("opacity-0");
 		});
+
+		this.el.addEventListener("touchend", () => {
+			if (navigator.vibrate) {
+				navigator.vibrate(10);
+			}
+		});
 	},
 
 	destroyed() {

@@ -119,3 +119,21 @@
 
 
 /* This file is for your main application CSS */
+
+/* Touch-optimized interactions for mobile */
+@layer base {
+	/* Prevent 300ms tap delay on all interactive elements */
+	button,
+	a,
+	[phx-click],
+	[role="button"] {
+		touch-action: manipulation;
+	}
+
+	/* Prevent text selection on rapid taps */
+	[phx-click] {
+		-webkit-tap-highlight-color: transparent;
+		-webkit-touch-callout: none;
+		user-select: none;
+	}
+}

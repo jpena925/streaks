@@ -26,19 +26,33 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
     <div
       id={"habit-cube-#{@habit_id}-#{Date.to_iso8601(@date)}"}
       class={[
-        "w-5 h-5 sm:w-3.5 sm:h-3.5 rounded-sm border-2 transition-colors duration-200 relative group touch-manipulation",
+        "w-5 h-5 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all duration-200 relative group touch-manipulation",
         if(@is_future,
-          do: "bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-30 border-transparent",
+          do:
+            "bg-gray-200/50 dark:bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-300 dark:border-gray-700",
           else: "cursor-pointer hover:opacity-80 active:scale-95"
         ),
-        if(!@is_future && @completed, do: @completed_classes, else: nil),
-        if(!@is_future && !@completed,
-          do:
-            "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border-transparent hover:border-gray-400 dark:hover:border-gray-500",
+        if(!@is_future && @completed,
+          do: [
+            @completed_classes,
+            "habit-cube-complete",
+            if(@is_today, do: "habit-cube-today", else: nil)
+          ],
           else: nil
         ),
-        if(@is_today,
-          do: "ring-2 ring-green-500 dark:ring-green-400 ring-offset-1 dark:ring-offset-gray-900",
+        if(!@is_future && !@completed,
+          do:
+            "bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-gray-500 dark:hover:border-gray-500",
+          else: nil
+        ),
+        if(@is_today && !@completed,
+          do:
+            "ring-2 ring-orange-500 dark:ring-orange-400 ring-offset-1 ring-offset-gray-50 dark:ring-offset-black",
+          else: nil
+        ),
+        if(@is_today && @completed,
+          do:
+            "ring-2 ring-green-400 dark:ring-green-300 ring-offset-1 ring-offset-gray-50 dark:ring-offset-black",
           else: nil
         )
       ]}
@@ -61,18 +75,18 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   end
 
   defp quantity_intensity_class(nil, _low, _high) do
-    "bg-green-500 border-transparent shadow-sm"
+    "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
   end
 
   defp quantity_intensity_class(quantity, low, high) do
     level = intensity_level(quantity, low, high)
 
     case level do
-      1 -> "bg-green-300 border-transparent shadow-sm"
-      2 -> "bg-green-400 border-transparent shadow-sm"
-      3 -> "bg-green-500 border-transparent shadow-sm"
-      4 -> "bg-green-600 border-transparent shadow-sm"
-      _ -> "bg-green-700 border-transparent shadow-sm"
+      1 -> "bg-green-400/70 dark:bg-green-600/60 border-green-500 dark:border-green-500"
+      2 -> "bg-green-400 dark:bg-green-500/70 border-green-500 dark:border-green-400"
+      3 -> "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
+      4 -> "bg-green-600 dark:bg-green-400 border-green-700 dark:border-green-300"
+      _ -> "bg-green-700 dark:bg-green-300 border-green-800 dark:border-green-200"
     end
   end
 

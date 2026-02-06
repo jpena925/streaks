@@ -49,7 +49,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
               phx-value-id={@habit.id}
               disabled={@is_first}
               class={[
-                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition-colors",
                 @is_first && "opacity-30 cursor-not-allowed"
               ]}
               title="Move up"
@@ -61,7 +61,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
               phx-value-id={@habit.id}
               disabled={@is_last}
               class={[
-                "text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 transition-colors",
+                "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition-colors",
                 @is_last && "opacity-30 cursor-not-allowed"
               ]}
               title="Move down"
@@ -116,7 +116,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
       </div>
       
     <!-- Grid container -->
-      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div
           id={"habit-grid-scroll-#{@habit.id}"}
@@ -145,10 +145,10 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
                 phx-value-year={year}
                 phx-value-week={week_num}
                 class={[
-                  "w-5 sm:w-3.5 text-[10px] sm:text-[10px] text-center tabular-nums transition-colors cursor-pointer touch-manipulation",
-                  "hover:text-green-600 dark:hover:text-green-400",
+                  "w-5 sm:w-3.5 text-[12px] sm:text-[11px] text-center tabular-nums transition-colors cursor-pointer touch-manipulation",
+                  "hover:text-orange-500 dark:hover:text-orange-400",
                   if(Map.has_key?(@weekly_notes_map, {year, week_num}),
-                    do: "text-green-600 dark:text-green-400 font-semibold",
+                    do: "text-orange-500 dark:text-orange-400 font-semibold",
                     else: "text-gray-400 dark:text-gray-500"
                   )
                 ]}
@@ -180,17 +180,20 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
         </div>
         
     <!-- Legend -->
-        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 dark:text-gray-400">
+        <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-700 dark:text-gray-300">
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-sm"></div>
+            <div class="w-3 h-3 bg-gray-200 dark:bg-gray-800 border border-gray-400 dark:border-gray-600 rounded-sm">
+            </div>
             <span>No data</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-green-500 rounded-sm"></div>
+            <div class="w-3 h-3 bg-green-500 border border-green-600 dark:border-green-400 rounded-sm habit-cube-complete">
+            </div>
             <span>Completed</span>
           </div>
           <div class="flex items-center gap-1.5 sm:gap-2">
-            <div class="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded-sm opacity-40"></div>
+            <div class="w-3 h-3 bg-gray-200/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-sm opacity-50">
+            </div>
             <span>Future</span>
           </div>
         </div>

@@ -82,11 +82,11 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
     level = intensity_level(quantity, low, high)
 
     case level do
-      1 -> "bg-green-400/70 dark:bg-green-600/60 border-green-500 dark:border-green-500"
-      2 -> "bg-green-400 dark:bg-green-500/70 border-green-500 dark:border-green-400"
+      1 -> "bg-green-400/70 dark:bg-green-300 border-green-500 dark:border-green-200"
+      2 -> "bg-green-400 dark:bg-green-400 border-green-500 dark:border-green-300"
       3 -> "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
-      4 -> "bg-green-600 dark:bg-green-400 border-green-700 dark:border-green-300"
-      _ -> "bg-green-700 dark:bg-green-300 border-green-800 dark:border-green-200"
+      4 -> "bg-green-600 dark:bg-green-600 border-green-700 dark:border-green-500"
+      _ -> "bg-green-700 dark:bg-green-700 border-green-800 dark:border-green-600"
     end
   end
 

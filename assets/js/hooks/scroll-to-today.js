@@ -21,7 +21,7 @@ export default {
 		const contentWidth = innerContent.scrollWidth;
 		const columnWidth = contentWidth / totalWeeks;
 
-		const weeksOfContext = 5;
+		const weeksOfContext = 9;
 		const targetColumn = Math.max(0, currentWeekIndex - weeksOfContext);
 		const targetScroll = targetColumn * columnWidth;
 

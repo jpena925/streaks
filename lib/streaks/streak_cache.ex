@@ -55,14 +55,12 @@ defmodule Streaks.StreakCache do
     {streaks, new_state} =
       case Map.get(state, key) do
         nil ->
-          # Cache miss: compute via Habits, then store
           dates = Streaks.Habits.get_completion_dates_for_habit(habit_id, timezone)
           streaks = Streaks.Habits.calculate_streaks_from_dates(dates, timezone)
           new_state = Map.put(state, key, streaks)
           {streaks, new_state}
 
         cached ->
-          # Cache hit: return what we stored
           {cached, state}
       end
 

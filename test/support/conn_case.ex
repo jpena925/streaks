@@ -33,6 +33,13 @@ defmodule StreaksWeb.ConnCase do
 
   setup tags do
     Streaks.DataCase.setup_sandbox(tags)
+
+    # StreakCache GenServer runs in a separate process; on cache miss it uses Repo.
+    # Allow it to use this test's sandbox connection so LiveView tests don't hit ownership errors.
+    if streak_cache_pid = Process.whereis(Streaks.StreakCache) do
+      Ecto.Adapters.SQL.Sandbox.allow(Streaks.Repo, self(), streak_cache_pid)
+    end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 

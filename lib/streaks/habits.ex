@@ -255,6 +255,15 @@ defmodule Streaks.Habits do
   """
   @spec get_habit_completions(Habit.t(), integer(), String.t()) :: [Date.t()]
   def get_habit_completions(%Habit{id: habit_id}, days \\ 365, timezone \\ "UTC") do
+    get_completion_dates_for_habit(habit_id, timezone, days)
+  end
+
+  @doc """
+  Returns completion dates for a habit by id (last 365 days by default).
+  Used by StreakCache so it can compute streaks without a Habit struct.
+  """
+  @spec get_completion_dates_for_habit(integer(), String.t(), integer()) :: [Date.t()]
+  def get_completion_dates_for_habit(habit_id, timezone \\ "UTC", days \\ 365) do
     start_date = Date.add(today(timezone), -days)
 
     HabitCompletion

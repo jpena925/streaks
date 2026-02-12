@@ -1,5 +1,7 @@
+# async: false so Ecto Sandbox.allow(Repo, self(), StreakCache) applies to the single
+# test process; with async: true the shared GenServer can get the wrong connection.
 defmodule StreaksWeb.HabitsLive.IndexTest do
-  use StreaksWeb.ConnCase, async: true
+  use StreaksWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Streaks.AccountsFixtures

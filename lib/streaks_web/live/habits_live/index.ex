@@ -265,6 +265,7 @@ defmodule StreaksWeb.HabitsLive.Index do
          {:ok, completion} <-
            Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
       StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
+
       {:noreply,
        socket
        |> add_completion_to_habit(habit.id, completion)

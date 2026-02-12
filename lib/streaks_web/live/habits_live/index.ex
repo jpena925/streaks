@@ -3,6 +3,7 @@ defmodule StreaksWeb.HabitsLive.Index do
 
   alias Streaks.Habits
   alias Streaks.Habits.Habit
+  alias Streaks.StreakCache
   alias StreaksWeb.HabitsLive.HabitCard
   alias StreaksWeb.HabitsLive.HabitSettingsModal
   alias StreaksWeb.HabitsLive.QuantityModal
@@ -205,6 +206,7 @@ defmodule StreaksWeb.HabitsLive.Index do
       else
         case Habits.log_habit_completion(habit, date) do
           {:ok, completion} ->
+            StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
             {:noreply, add_completion_to_habit(socket, habit.id, completion)}
 
           {:error, _changeset} ->
@@ -239,6 +241,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("unlog_day", %{"habit_id" => habit_id, "date" => date}, socket) do
     with {:ok, habit} <- fetch_user_habit(habit_id, socket) do
       :ok = Habits.unlog_habit_completion(habit, date)
+      StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
       {:noreply, remove_completion_from_habit(socket, habit.id, date)}
     else
       :error -> {:noreply, habit_not_found(socket)}
@@ -261,6 +264,7 @@ defmodule StreaksWeb.HabitsLive.Index do
          {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket),
          {:ok, completion} <-
            Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
+      StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
       {:noreply,
        socket
        |> add_completion_to_habit(habit.id, completion)
@@ -281,6 +285,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   def handle_event("delete_quantity", _params, socket) do
     with {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket) do
       :ok = Habits.unlog_habit_completion(habit, socket.assigns.quantity_date)
+      StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
 
       {:noreply,
        socket

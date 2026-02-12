@@ -31,6 +31,17 @@ defmodule Streaks.StreakCache do
     GenServer.call(__MODULE__, {:get, user_id, habit_id, timezone})
   end
 
+  @doc """
+  Clears cached streaks for a habit so the next get_streaks recomputes.
+
+  Uses a GenServer **cast** (fire-and-forget): we don't wait for a reply. The
+  process removes any cache entries for this user_id + habit_id (all timezones)
+  and continues. Call this after log_habit_completion or unlog_habit_completion.
+  """
+  def invalidate(user_id, habit_id) do
+    GenServer.cast(__MODULE__, {:invalidate, user_id, habit_id})
+  end
+
   # ---------------------------------------------------------------------------
   # GenServer callbacks (run inside the process)
   # ---------------------------------------------------------------------------
@@ -65,5 +76,16 @@ defmodule Streaks.StreakCache do
       end
 
     {:reply, streaks, new_state}
+  end
+
+  # Handle "invalidate" — asynchronous; no reply. Remove all keys for this user+habit.
+  @impl GenServer
+  def handle_cast({:invalidate, user_id, habit_id}, state) do
+    new_state =
+      state
+      |> Enum.reject(fn {{u, h, _tz}, _val} -> u == user_id and h == habit_id end)
+      |> Map.new()
+
+    {:noreply, new_state}
   end
 end

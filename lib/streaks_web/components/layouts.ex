@@ -35,7 +35,7 @@ defmodule StreaksWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <main class="px-4 py-20 sm:px-6 lg:px-8 bg-white dark:bg-black min-h-screen">
+    <main class="px-4 pt-[calc(4rem+env(safe-area-inset-top,0px))] pb-20 sm:px-6 lg:px-8 bg-white dark:bg-black min-h-screen">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>

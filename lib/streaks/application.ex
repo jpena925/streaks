@@ -12,8 +12,7 @@ defmodule Streaks.Application do
       Streaks.Repo,
       {DNSCluster, query: Application.get_env(:streaks, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Streaks.PubSub},
-      # Start a worker by calling: Streaks.Worker.start_link(arg)
-      # {Streaks.Worker, arg},
+      Streaks.StreakCache,
       # Start to serve requests, typically the last entry
       StreaksWeb.Endpoint
     ]

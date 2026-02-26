@@ -2,6 +2,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
   use StreaksWeb, :html
 
   alias Streaks.Habits
+  alias Streaks.StreakCache
   alias StreaksWeb.HabitsLive.HabitCube
 
   attr :habit, :map, required: true
@@ -19,8 +20,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     today = Habits.today(assigns.timezone)
     week_numbers = get_week_numbers(habit_days)
 
-    streak_dates = Enum.map(assigns.habit.completions, & &1.completed_on)
-    streaks = Habits.calculate_streaks_from_dates(streak_dates, assigns.timezone)
+    streaks = StreakCache.get_streaks(assigns.current_user.id, assigns.habit.id, assigns.timezone)
 
     total_weeks = length(week_numbers)
     current_week_index = find_current_week_index(habit_days, today)

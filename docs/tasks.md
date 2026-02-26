@@ -280,24 +280,6 @@ end
 
 ## 📋 Implementation Order Suggestion
 
-**Week 1-2: Daily Pain Points**
-
-1. [x] ~~Fix slow toggle (targeted updates + N+1 fix)~~ ✅ Done
-2. [ ] Add "Today" compact view
-3. [ ] Add weekly notes with clickable week numbers
-
-**Week 3-4: Mobile & PWA**
-
-4. [ ] Larger touch targets on mobile
-5. [ ] Add manifest.json
-6. [ ] Add proper icons
-7. [ ] Test "Add to Home Screen" on iPhone
-
-**Week 5-6: Aesthetic**
-
-8. [ ] Add CRT/retro effects (opt-in toggle)
-9. [ ] Experiment with ASCII borders
-
 **Week 7-8: Backend Learning**
 
 10. [ ] Implement GenServer streak cache
@@ -364,12 +346,3 @@ Template changes:
 - [ ] Add "Mark all as complete" button for today
 
 ---
-
-## Resources
-
-- [Phoenix LiveView Streams](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#stream/4)
-- [PWA on iOS](https://web.dev/learn/pwa/installation/)
-- [GenServer Guide](https://elixir-lang.org/getting-started/mix-otp/genserver.html)
-- [Phoenix Channels](https://hexdocs.pm/phoenix/channels.html)
-- [Oban Documentation](https://hexdocs.pm/oban/Oban.html)
-- [Retro CSS Effects](https://aleclownes.com/2017/02/01/crt-display-css.html)

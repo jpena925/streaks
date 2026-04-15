@@ -60,7 +60,7 @@ drinks_data = [
 workout_habit =
   Repo.insert!(%Habit{
     name: "Workout",
-    has_quantity: false,
+    tracking_mode: :binary,
     position: 0,
     user_id: user.id,
     inserted_at: habit_created_at,
@@ -70,7 +70,7 @@ workout_habit =
 drinks_habit =
   Repo.insert!(%Habit{
     name: "Drinks",
-    has_quantity: true,
+    tracking_mode: :quantity,
     position: 1,
     user_id: user.id,
     inserted_at: habit_created_at,

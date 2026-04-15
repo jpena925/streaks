@@ -115,22 +115,22 @@ defmodule Streaks.HabitsTest do
   describe "create_habit/2" do
     test "creates a habit with valid attributes" do
       user = user_fixture()
-      attrs = %{name: "New Habit", has_quantity: false}
+      attrs = %{name: "New Habit", tracking_mode: :binary}
 
       {:ok, habit} = Habits.create_habit(user, attrs)
 
       assert habit.name == "New Habit"
-      assert habit.has_quantity == false
+      assert habit.tracking_mode == :binary
       assert habit.user_id == user.id
     end
 
     test "creates a habit with quantity tracking" do
       user = user_fixture()
-      attrs = %{name: "Push-ups", has_quantity: true}
+      attrs = %{name: "Push-ups", tracking_mode: :quantity}
 
       {:ok, habit} = Habits.create_habit(user, attrs)
 
-      assert habit.has_quantity == true
+      assert habit.tracking_mode == :quantity
     end
 
     test "sets position automatically" do

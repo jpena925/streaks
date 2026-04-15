@@ -180,30 +180,83 @@ defmodule Streaks.Habits do
 
   @doc """
   Logs a habit completion for a specific date.
-  """
-  @spec log_habit_completion(Habit.t() | integer(), Date.t() | String.t(), integer() | nil) ::
-          {:ok, HabitCompletion.t()} | {:error, term()}
-  def log_habit_completion(habit_or_id, date, quantity \\ nil)
 
-  def log_habit_completion(%Habit{id: habit_id}, date, quantity) when is_binary(date) do
+  The third argument depends on `tracking_mode`:
+
+  * `:binary` — use `nil`
+  * `:quantity` — a positive integer
+  * `:qualitative` — the selected option id (string)
+  """
+  @spec log_habit_completion(Habit.t() | integer(), Date.t() | String.t(), term()) ::
+          {:ok, HabitCompletion.t()} | {:error, term()}
+  def log_habit_completion(habit_or_id, date, extra \\ nil)
+
+  def log_habit_completion(%Habit{} = habit, date, extra) when is_binary(date) do
     case Date.from_iso8601(date) do
-      {:ok, parsed_date} -> log_habit_completion(habit_id, parsed_date, quantity)
+      {:ok, parsed_date} -> log_habit_completion(habit, parsed_date, extra)
       {:error, _} -> {:error, :invalid_date}
     end
   end
 
-  def log_habit_completion(%Habit{id: habit_id}, %Date{} = date, quantity) do
-    log_habit_completion(habit_id, date, quantity)
+  def log_habit_completion(%Habit{tracking_mode: :binary} = habit, %Date{} = date, nil) do
+    insert_habit_completion(habit, date, %{
+      quantity: nil,
+      qualitative_option_id: nil,
+      qualitative_color: nil
+    })
   end
 
-  def log_habit_completion(habit_id, %Date{} = date, quantity) when is_integer(habit_id) do
-    attrs = %{completed_on: date}
-    attrs = if quantity, do: Map.put(attrs, :quantity, quantity), else: attrs
+  def log_habit_completion(%Habit{tracking_mode: :binary}, %Date{} = _date, _) do
+    {:error, :invalid_completion}
+  end
+
+  def log_habit_completion(%Habit{tracking_mode: :quantity} = habit, %Date{} = date, quantity)
+      when is_integer(quantity) do
+    insert_habit_completion(habit, date, %{
+      quantity: quantity,
+      qualitative_option_id: nil,
+      qualitative_color: nil
+    })
+  end
+
+  def log_habit_completion(%Habit{tracking_mode: :qualitative} = habit, %Date{} = date, option_id)
+      when is_binary(option_id) do
+    case Habit.qualitative_color_for_option(habit, option_id) do
+      nil ->
+        {:error, :invalid_qualitative_option}
+
+      color ->
+        insert_habit_completion(habit, date, %{
+          quantity: nil,
+          qualitative_option_id: option_id,
+          qualitative_color: color
+        })
+    end
+  end
+
+  def log_habit_completion(%Habit{tracking_mode: :qualitative}, %Date{} = _date, _) do
+    {:error, :invalid_qualitative_option}
+  end
+
+  def log_habit_completion(%Habit{}, %Date{} = _date, _extra) do
+    {:error, :invalid_completion}
+  end
+
+  def log_habit_completion(habit_id, %Date{} = date, extra) when is_integer(habit_id) do
+    case Repo.get(Habit, habit_id) do
+      nil -> {:error, :not_found}
+      habit -> log_habit_completion(habit, date, extra)
+    end
+  end
+
+  defp insert_habit_completion(%Habit{id: habit_id}, %Date{} = date, fields) do
+    attrs = Map.merge(%{completed_on: date, habit_id: habit_id}, fields)
 
     %HabitCompletion{habit_id: habit_id}
     |> HabitCompletion.changeset(attrs)
     |> Repo.insert(
-      on_conflict: {:replace, [:quantity, :updated_at]},
+      on_conflict:
+        {:replace, [:quantity, :qualitative_option_id, :qualitative_color, :updated_at]},
       conflict_target: [:habit_id, :completed_on]
     )
   end

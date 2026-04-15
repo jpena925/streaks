@@ -48,20 +48,25 @@
           autofocus
         />
 
-        <label class="flex items-center gap-2 cursor-pointer group">
+        <div class="space-y-2">
+          <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Tracking type
+          </label>
           <.input
-            field={@form[:has_quantity]}
-            type="checkbox"
-            class="w-4 h-4 border-gray-300 dark:border-gray-700 text-gray-900 focus:ring-0 bg-white dark:bg-black cursor-pointer"
+            field={@form[:tracking_mode]}
+            type="select"
+            options={[
+              {"Yes / no", "binary"},
+              {"Number (gradient)", "quantity"},
+              {"Qualitative (colors)", "qualitative"}
+            ]}
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
           />
-          <span class="text-xs text-gray-600 dark:text-gray-400">
-            Track with quantity
-          </span>
-        </label>
+        </div>
 
         <div
-          :if={Phoenix.HTML.Form.normalize_value("checkbox", @form[:has_quantity].value)}
-          class="pl-6 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
+          :if={Enum.member?([:quantity, "quantity"], @form[:tracking_mode].value)}
+          class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
         >
           <p class="text-xs text-gray-500 dark:text-gray-500">
             What range do you expect?
@@ -88,6 +93,79 @@
               />
               <span class="text-xs text-gray-400 dark:text-gray-600">Darkest</span>
             </div>
+          </div>
+        </div>
+
+        <div
+          :if={Enum.member?([:qualitative, "qualitative"], @form[:tracking_mode].value)}
+          class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
+        >
+          <p class="text-xs text-gray-500 dark:text-gray-500">
+            Start with two levels and add up to five. Meanings are only shown here.
+          </p>
+          <div
+            :for={row <- @create_qual_rows}
+            class="flex flex-col sm:flex-row gap-2 sm:items-end"
+          >
+            <input
+              type="hidden"
+              name={"habit[qualitative_options][#{row.index}][id]"}
+              value={row.id}
+            />
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                name={"habit[qualitative_options][#{row.index}][color]"}
+                value={row.color}
+                class="h-10 w-14 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="text-xs text-gray-400 dark:text-gray-600 block mb-1">
+                Meaning (setup only)
+              </label>
+              <input
+                type="text"
+                name={"habit[qualitative_options][#{row.index}][label]"}
+                value={row.label}
+                placeholder="e.g. Rough day"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 rounded text-sm"
+              />
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <button
+              type="button"
+              phx-click="create_qual_add_row"
+              disabled={length(@create_qual_rows) >= 5}
+              class={[
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
+                if(length(@create_qual_rows) >= 5,
+                  do:
+                    "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
+                  else:
+                    "border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-gray-900 dark:hover:border-gray-400"
+                )
+              ]}
+            >
+              <.icon name="hero-plus" class="w-3.5 h-3.5" /> Add level
+            </button>
+            <button
+              type="button"
+              phx-click="create_qual_remove_row"
+              disabled={length(@create_qual_rows) <= 2}
+              class={[
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
+                if(length(@create_qual_rows) <= 2,
+                  do:
+                    "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
+                  else:
+                    "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-gray-400"
+                )
+              ]}
+            >
+              <.icon name="hero-minus" class="w-3.5 h-3.5" /> Remove last
+            </button>
           </div>
         </div>
 
@@ -206,12 +284,19 @@
       quantity_value={@quantity_value}
       is_edit_mode={@is_edit_mode}
     />
+
+    <QualitativeModal.qualitative_modal
+      show={@show_qualitative_modal}
+      options={@qualitative_modal_options}
+      is_edit_mode={@qualitative_is_edit}
+    />
     
 <!-- Habit Settings Modal -->
     <HabitSettingsModal.habit_settings_modal
       show={@show_settings_modal}
       habit={@settings_habit}
-      has_quantity={@settings_has_quantity}
+      tracking_mode={@settings_tracking_mode}
+      qual_rows={@settings_qual_rows}
     />
     
 <!-- Weekly Note Modal -->

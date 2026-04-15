@@ -1,25 +1,47 @@
 defmodule StreaksWeb.HabitsLive.HabitCube do
   use StreaksWeb, :html
 
+  alias Streaks.Habits.HabitCompletion
+
   attr :date, Date, required: true
   attr :completed, :boolean, required: true
-  attr :quantity, :integer, default: nil
+  attr :completion, :any, default: nil
   attr :habit_id, :integer, required: true
   attr :is_today, :boolean, default: false
   attr :is_future, :boolean, default: false
-  attr :has_quantity, :boolean, default: false
+  attr :tracking_mode, :atom, default: :binary
   attr :quantity_low, :integer, default: 1
   attr :quantity_high, :integer, default: 10
 
   def habit_cube(assigns) do
     title = Date.to_iso8601(assigns.date)
 
+    quantity =
+      case assigns.completion do
+        %HabitCompletion{quantity: q} when is_integer(q) -> q
+        _ -> nil
+      end
+
+    qualitative_color =
+      case assigns.completion do
+        %HabitCompletion{qualitative_color: c} when is_binary(c) -> c
+        _ -> nil
+      end
+
     completed_classes =
-      quantity_intensity_class(assigns.quantity, assigns.quantity_low, assigns.quantity_high)
+      cube_fill_classes(
+        assigns.tracking_mode,
+        quantity,
+        qualitative_color,
+        assigns.quantity_low,
+        assigns.quantity_high
+      )
 
     assigns =
       assigns
       |> assign(:title, title)
+      |> assign(:quantity, quantity)
+      |> assign(:qualitative_color, qualitative_color)
       |> assign(:completed_classes, completed_classes)
 
     ~H"""
@@ -56,22 +78,58 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
           else: nil
         )
       ]}
-      title={if(@quantity && @completed, do: nil, else: @title)}
+      title={cube_tooltip(@tracking_mode, @quantity, @completed, @title)}
       phx-click={
         cond do
           @is_future -> nil
-          @completed && @has_quantity -> "edit_quantity"
+          @completed && @tracking_mode == :quantity -> "edit_quantity"
+          @completed && @tracking_mode == :qualitative -> "edit_qualitative"
           @completed -> "unlog_day"
           true -> "log_day"
         end
       }
       phx-value-habit_id={@habit_id}
       phx-value-date={Date.to_iso8601(@date)}
-      phx-hook={if(@quantity && @completed, do: "Tooltip", else: nil)}
-      data-tooltip-text={if(@quantity && @completed, do: "#{@quantity}", else: nil)}
+      phx-hook={if(@quantity && @completed && @tracking_mode == :quantity, do: "Tooltip", else: nil)}
+      data-tooltip-text={
+        if(@quantity && @completed && @tracking_mode == :quantity, do: "#{@quantity}", else: nil)
+      }
+      style={cube_inline_style(@tracking_mode, @completed, @qualitative_color)}
     >
     </div>
     """
+  end
+
+  defp cube_tooltip(:quantity, quantity, completed, _title)
+       when completed and is_integer(quantity),
+       do: nil
+
+  defp cube_tooltip(_mode, _quantity, _completed, title), do: title
+
+  defp cube_inline_style(:qualitative, true, color) when is_binary(color) do
+    "background-color: #{color}; border-color: #{color}"
+  end
+
+  defp cube_inline_style(_mode, _completed, _color), do: nil
+
+  defp cube_fill_classes(:qualitative, _q, color, _low, _high) when is_binary(color) do
+    "border-2"
+  end
+
+  defp cube_fill_classes(:qualitative, _q, nil, _low, _high) do
+    "bg-gray-400 dark:bg-gray-600 border-gray-500 dark:border-gray-500"
+  end
+
+  defp cube_fill_classes(:quantity, quantity, _qc, low, high) do
+    quantity_intensity_class(quantity, low, high)
+  end
+
+  defp cube_fill_classes(:binary, _quantity, _qc, _low, _high) do
+    "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
+  end
+
+  defp cube_fill_classes(_mode, _quantity, _qc, _low, _high) do
+    "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
   end
 
   defp quantity_intensity_class(nil, _low, _high) do

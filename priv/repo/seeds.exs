@@ -28,7 +28,7 @@ Repo.delete_all(User)
   |> Repo.insert()
 
 today = Date.utc_today()
-earliest_date = Date.add(today, -13)
+earliest_date = Date.add(today, -20)
 habit_created_at = DateTime.new!(earliest_date, ~T[00:00:00], "Etc/UTC")
 
 workout_dates = [
@@ -77,6 +77,43 @@ drinks_habit =
     updated_at: habit_created_at
   })
 
+mood_options = [
+  %{id: "red", color: "#ef4444", label: "Red"},
+  %{id: "orange", color: "#f97316", label: "Orange"},
+  %{id: "yellow", color: "#eab308", label: "Yellow"},
+  %{id: "green", color: "#22c55e", label: "Green"}
+]
+
+mood_habit =
+  Repo.insert!(%Habit{
+    name: "Mood",
+    tracking_mode: :qualitative,
+    qualitative_options: mood_options,
+    position: 2,
+    user_id: user.id,
+    inserted_at: habit_created_at,
+    updated_at: habit_created_at
+  })
+
+mood_start = earliest_date
+
+mood_data =
+  for i <- 0..20 do
+    date = Date.add(mood_start, i)
+
+    option_id =
+      cond do
+        rem(i, 9) == 0 -> "red"
+        rem(i, 5) == 0 -> "orange"
+        rem(i, 2) == 0 -> "green"
+        true -> "yellow"
+      end
+
+    {date, option_id}
+  end
+
+mood_color_by_id = Map.new(mood_options, fn %{id: id, color: color} -> {id, color} end)
+
 # mark habits as completed
 for date <- workout_dates do
   Repo.insert!(%HabitCompletion{
@@ -90,6 +127,15 @@ for {date, quantity} <- drinks_data do
     habit_id: drinks_habit.id,
     completed_on: date,
     quantity: quantity
+  })
+end
+
+for {date, option_id} <- mood_data do
+  Repo.insert!(%HabitCompletion{
+    habit_id: mood_habit.id,
+    completed_on: date,
+    qualitative_option_id: option_id,
+    qualitative_color: Map.fetch!(mood_color_by_id, option_id)
   })
 end
 

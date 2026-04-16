@@ -1,15 +1,20 @@
 # Streaks
 
-A habit tracker with a GitHub-style contribution grid. 
+A habit tracker with a GitHub-style contribution grid.
 
 <img width="734" height="557" alt="Screenshot 2025-11-17 at 6 22 46 PM" src="https://github.com/user-attachments/assets/6b2ffb89-127e-4abd-94a6-d0f125dd6682" />
 
 
-## How to Track your habits
+## Tracking habits (your options)
 
-1. Add a Habit
-2. Name it
-3. Decide if it is a simple "did it" or not kind of habit, or it is quantitative in some way (like glasses of water a day).
+- **What you’re tracking**
+  - **Did it / didn’t**: check it off for the day
+  - **Quantitative**: track a number (ex: glasses of water, pages read, minutes meditated)
+  - **Qualitative**: track a quality (ex: mood from bad to good, tired from very to not at all etc)
+
+- **How it shows up**
+  - **Grid heatmap** so you can spot patterns fast
+  - **Streaks** when you’re consistent (and gentle resets when you’re not)
 
 ## Running it locally
 
@@ -26,7 +31,7 @@ After running `mix setup` which runs the seeds, login with:
 user: demo@streaks.com
 password: password123456
 
-check out `localhost:4000` in your browser for your local version
+Then visit `http://localhost:4000`
 
 ## Stack
 

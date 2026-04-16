@@ -10,7 +10,7 @@ defmodule Streaks.HabitsFixtures do
     valid_attrs =
       Enum.into(attrs, %{
         name: "Test Habit #{System.unique_integer()}",
-        has_quantity: false
+        tracking_mode: :binary
       })
 
     {:ok, habit} = Habits.create_habit(user, valid_attrs)
@@ -18,7 +18,7 @@ defmodule Streaks.HabitsFixtures do
   end
 
   def habit_with_quantity_fixture(user, attrs \\ %{}) do
-    habit_fixture(user, Map.put(attrs, :has_quantity, true))
+    habit_fixture(user, Map.merge(attrs, %{tracking_mode: :quantity}))
   end
 
   def habit_with_completions_fixture(user, dates \\ []) do

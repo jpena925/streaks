@@ -14,7 +14,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
 
   def habit_card(assigns) do
     completion_dates = get_completion_dates(assigns.habit)
-    completions_map = get_completions_map(assigns.habit)
+    completions_by_day = completions_by_day(assigns.habit)
     habit_days = Habits.get_habit_days(assigns.habit, assigns.timezone)
     months = Habits.group_days_by_month(habit_days)
     today = Habits.today(assigns.timezone)
@@ -28,7 +28,7 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     assigns =
       assigns
       |> assign(:completion_dates, completion_dates)
-      |> assign(:completions_map, completions_map)
+      |> assign(:completions_by_day, completions_by_day)
       |> assign(:habit_days, habit_days)
       |> assign(:months, months)
       |> assign(:week_numbers, week_numbers)
@@ -167,9 +167,9 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
                 :for={{day, _index} <- Enum.with_index(@habit_days)}
                 date={day}
                 completed={MapSet.member?(@completion_dates, day)}
-                quantity={Map.get(@completions_map, day)}
+                completion={Map.get(@completions_by_day, day)}
                 habit_id={@habit.id}
-                has_quantity={@habit.has_quantity}
+                tracking_mode={@habit.tracking_mode}
                 quantity_low={@habit.quantity_low || 1}
                 quantity_high={@habit.quantity_high || 10}
                 is_today={day == @today}
@@ -186,7 +186,18 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </div>
             <span>No data</span>
           </div>
-          <div class="flex items-center gap-1.5 sm:gap-2">
+          <div
+            :if={@habit.tracking_mode == :qualitative}
+            class="flex flex-wrap items-center gap-2"
+          >
+            <span class="text-gray-500 dark:text-gray-500">Scale:</span>
+            <div
+              :for={opt <- @habit.qualitative_options || []}
+              class="w-3 h-3 rounded-sm border border-black/20 dark:border-white/20"
+              style={"background-color: #{Map.get(opt, "color") || Map.get(opt, :color)}"}
+            />
+          </div>
+          <div :if={@habit.tracking_mode != :qualitative} class="flex items-center gap-1.5 sm:gap-2">
             <div class="w-3 h-3 bg-green-500 border border-green-600 dark:border-green-400 rounded-sm habit-cube-complete">
             </div>
             <span>Completed</span>
@@ -208,10 +219,9 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
     |> MapSet.new()
   end
 
-  defp get_completions_map(habit) do
+  defp completions_by_day(habit) do
     habit.completions
-    |> Enum.map(&{&1.completed_on, &1.quantity})
-    |> Map.new()
+    |> Map.new(&{&1.completed_on, &1})
   end
 
   defp get_week_numbers(days) do

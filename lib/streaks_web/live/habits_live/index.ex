@@ -6,6 +6,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   alias Streaks.StreakCache
   alias StreaksWeb.HabitsLive.HabitCard
   alias StreaksWeb.HabitsLive.HabitSettingsModal
+  alias StreaksWeb.HabitsLive.QualitativeModal
   alias StreaksWeb.HabitsLive.QuantityModal
   alias StreaksWeb.HabitsLive.WeeklyNoteModal
 
@@ -23,7 +24,13 @@ defmodule StreaksWeb.HabitsLive.Index do
       |> assign(:show_archived, false)
       |> assign(:show_settings_modal, false)
       |> assign(:settings_habit, nil)
-      |> assign(:settings_has_quantity, false)
+      |> assign(:settings_tracking_mode, :binary)
+      |> assign(:settings_qual_rows, [])
+      |> assign(:show_qualitative_modal, false)
+      |> assign(:qualitative_habit_id, nil)
+      |> assign(:qualitative_date, nil)
+      |> assign(:qualitative_is_edit, false)
+      |> assign(:qualitative_modal_options, [])
       |> assign(:show_weekly_note_modal, false)
       |> assign(:weekly_note_habit_id, nil)
       |> assign(:weekly_note_year, nil)
@@ -61,7 +68,10 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("show_new_habit_form", _params, socket) do
-    {:noreply, assign(socket, :show_new_habit_form, true)}
+    {:noreply,
+     socket
+     |> assign(:show_new_habit_form, true)
+     |> assign(:create_qual_rows, initial_create_qual_rows(2))}
   end
 
   def handle_event("hide_new_habit_form", _params, socket) do
@@ -69,22 +79,83 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("validate", %{"habit" => habit_params}, socket) do
+    raw_qual = Map.get(habit_params, "qualitative_options")
+    mode = parse_tracking_mode(habit_params["tracking_mode"] || "binary")
+
+    create_qual_rows =
+      if mode == :qualitative do
+        build_create_qual_rows_from_params(raw_qual, socket.assigns.create_qual_rows)
+      else
+        socket.assigns.create_qual_rows
+      end
+
+    habit_params = normalize_create_habit_params(habit_params, finalize_qualitative_ids: false)
+
     changeset =
       %Habit{user_id: socket.assigns.current_scope.user.id}
       |> Habit.changeset(habit_params)
       |> Map.put(:action, :validate)
 
     form = to_form(changeset)
-    {:noreply, assign(socket, :form, form)}
+
+    {:noreply,
+     socket
+     |> assign(:form, form)
+     |> assign(:create_qual_rows, create_qual_rows)}
+  end
+
+  def handle_event("create_qual_add_row", _params, socket) do
+    rows = socket.assigns.create_qual_rows
+
+    if length(rows) >= 5 do
+      {:noreply, socket}
+    else
+      i = length(rows)
+
+      new_row = %{
+        index: i,
+        id: "new-#{i}",
+        color: default_qual_color_at(i),
+        label: ""
+      }
+
+      {:noreply, assign(socket, :create_qual_rows, rows ++ [new_row])}
+    end
+  end
+
+  def handle_event("create_qual_remove_row", _params, socket) do
+    rows = socket.assigns.create_qual_rows
+
+    if length(rows) <= 2 do
+      {:noreply, socket}
+    else
+      new_rows =
+        rows
+        |> Enum.take(length(rows) - 1)
+        |> reindex_new_habit_qual_rows()
+
+      {:noreply, assign(socket, :create_qual_rows, new_rows)}
+    end
   end
 
   def handle_event("create_habit", %{"habit" => habit_params}, socket) do
+    habit_params = normalize_create_habit_params(habit_params, finalize_qualitative_ids: true)
+    mode = parse_tracking_mode(habit_params["tracking_mode"] || "binary")
+
+    attrs = %{
+      name: habit_params["name"],
+      tracking_mode: mode,
+      qualitative_options: habit_params["qualitative_options"] || []
+    }
+
     attrs =
-      %{
-        name: habit_params["name"],
-        has_quantity: habit_params["has_quantity"]
-      }
-      |> maybe_add_quantity_config(habit_params)
+      if mode == :quantity do
+        attrs
+        |> Map.put(:quantity_low, parse_int(habit_params["quantity_low"], 1))
+        |> Map.put(:quantity_high, parse_int(habit_params["quantity_high"], 10))
+      else
+        attrs
+      end
 
     case Habits.create_habit(socket.assigns.current_scope.user, attrs) do
       {:ok, _habit} ->
@@ -195,23 +266,34 @@ defmodule StreaksWeb.HabitsLive.Index do
 
   def handle_event("log_day", %{"habit_id" => habit_id, "date" => date}, socket) do
     with {:ok, habit} <- fetch_user_habit(habit_id, socket) do
-      if habit.has_quantity do
-        {:noreply,
-         socket
-         |> assign(:show_quantity_modal, true)
-         |> assign(:quantity_habit_id, habit_id)
-         |> assign(:quantity_date, date)
-         |> assign(:quantity_value, "")
-         |> assign(:is_edit_mode, false)}
-      else
-        case Habits.log_habit_completion(habit, date) do
-          {:ok, completion} ->
-            StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
-            {:noreply, add_completion_to_habit(socket, habit.id, completion)}
+      cond do
+        habit.tracking_mode == :quantity ->
+          {:noreply,
+           socket
+           |> assign(:show_quantity_modal, true)
+           |> assign(:quantity_habit_id, habit_id)
+           |> assign(:quantity_date, date)
+           |> assign(:quantity_value, "")
+           |> assign(:is_edit_mode, false)}
 
-          {:error, _changeset} ->
-            {:noreply, put_flash(socket, :error, "Error logging completion")}
-        end
+        habit.tracking_mode == :qualitative ->
+          {:noreply,
+           socket
+           |> assign(:show_qualitative_modal, true)
+           |> assign(:qualitative_habit_id, habit_id)
+           |> assign(:qualitative_date, date)
+           |> assign(:qualitative_is_edit, false)
+           |> assign(:qualitative_modal_options, habit.qualitative_options || [])}
+
+        true ->
+          case Habits.log_habit_completion(habit, date) do
+            {:ok, completion} ->
+              StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
+              {:noreply, add_completion_to_habit(socket, habit.id, completion)}
+
+            {:error, _reason} ->
+              {:noreply, put_flash(socket, :error, "Error logging completion")}
+          end
       end
     else
       :error -> {:noreply, habit_not_found(socket)}
@@ -303,6 +385,79 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
+  def handle_event("close_qualitative_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_qualitative_modal, false)
+     |> assign(:qualitative_habit_id, nil)
+     |> assign(:qualitative_date, nil)
+     |> assign(:qualitative_is_edit, false)
+     |> assign(:qualitative_modal_options, [])}
+  end
+
+  def handle_event("submit_qualitative", %{"option_id" => option_id}, socket) do
+    with {:ok, habit} <- fetch_user_habit(socket.assigns.qualitative_habit_id, socket),
+         {:ok, completion} <-
+           Habits.log_habit_completion(habit, socket.assigns.qualitative_date, option_id) do
+      StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
+
+      {:noreply,
+       socket
+       |> add_completion_to_habit(habit.id, completion)
+       |> assign(:show_qualitative_modal, false)
+       |> assign(:qualitative_habit_id, nil)
+       |> assign(:qualitative_date, nil)
+       |> assign(:qualitative_is_edit, false)
+       |> assign(:qualitative_modal_options, [])}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Could not log that option")}
+    end
+  end
+
+  def handle_event("edit_qualitative", %{"habit_id" => habit_id, "date" => date}, socket) do
+    with {:ok, habit} <- fetch_user_habit(habit_id, socket),
+         completion <- Habits.get_completion(habit, date),
+         true <- completion != nil do
+      {:noreply,
+       socket
+       |> assign(:show_qualitative_modal, true)
+       |> assign(:qualitative_habit_id, habit_id)
+       |> assign(:qualitative_date, date)
+       |> assign(:qualitative_is_edit, true)
+       |> assign(:qualitative_modal_options, habit.qualitative_options || [])}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Completion not found")}
+    end
+  end
+
+  def handle_event("delete_qualitative", _params, socket) do
+    with {:ok, habit} <- fetch_user_habit(socket.assigns.qualitative_habit_id, socket) do
+      :ok = Habits.unlog_habit_completion(habit, socket.assigns.qualitative_date)
+      StreakCache.invalidate(socket.assigns.current_scope.user.id, habit.id)
+
+      {:noreply,
+       socket
+       |> remove_completion_from_habit(habit.id, socket.assigns.qualitative_date)
+       |> assign(:show_qualitative_modal, false)
+       |> assign(:qualitative_habit_id, nil)
+       |> assign(:qualitative_date, nil)
+       |> assign(:qualitative_is_edit, false)
+       |> assign(:qualitative_modal_options, [])
+       |> put_flash(:info, "Completion removed")}
+    else
+      :error ->
+        {:noreply, habit_not_found(socket)}
+    end
+  end
+
   def handle_event("move_habit_up", %{"id" => id}, socket) do
     move_habit(id, :up, socket)
   end
@@ -317,7 +472,8 @@ defmodule StreaksWeb.HabitsLive.Index do
        socket
        |> assign(:show_settings_modal, true)
        |> assign(:settings_habit, habit)
-       |> assign(:settings_has_quantity, habit.has_quantity)}
+       |> assign(:settings_tracking_mode, habit.tracking_mode)
+       |> assign(:settings_qual_rows, settings_qual_rows_for_habit(habit))}
     else
       :error -> {:noreply, habit_not_found(socket)}
     end
@@ -328,53 +484,99 @@ defmodule StreaksWeb.HabitsLive.Index do
      socket
      |> assign(:show_settings_modal, false)
      |> assign(:settings_habit, nil)
-     |> assign(:settings_has_quantity, false)}
+     |> assign(:settings_tracking_mode, :binary)
+     |> assign(:settings_qual_rows, [])}
   end
 
-  def handle_event("toggle_settings_quantity", %{"value" => "true"}, socket) do
-    {:noreply, assign(socket, :settings_has_quantity, true)}
+  def handle_event("settings_select_mode", %{"mode" => mode}, socket) do
+    new_mode = parse_tracking_mode(mode)
+    habit = socket.assigns.settings_habit
+
+    qual_rows =
+      if new_mode == :qualitative do
+        settings_qual_rows_for_habit(%{habit | tracking_mode: :qualitative})
+      else
+        socket.assigns.settings_qual_rows
+      end
+
+    {:noreply,
+     socket
+     |> assign(:settings_tracking_mode, new_mode)
+     |> assign(:settings_qual_rows, qual_rows)}
   end
 
-  def handle_event("toggle_settings_quantity", _params, socket) do
-    {:noreply, assign(socket, :settings_has_quantity, false)}
+  def handle_event("settings_qual_add_row", _params, socket) do
+    rows = socket.assigns.settings_qual_rows
+
+    if length(rows) >= 5 do
+      {:noreply, socket}
+    else
+      i = length(rows)
+
+      new_row = %{
+        index: i,
+        id: "new-#{i}",
+        color: default_qual_color_at(i),
+        label: ""
+      }
+
+      {:noreply, assign(socket, :settings_qual_rows, rows ++ [new_row])}
+    end
+  end
+
+  def handle_event("settings_qual_remove_row", _params, socket) do
+    rows = socket.assigns.settings_qual_rows
+
+    if length(rows) <= 2 do
+      {:noreply, socket}
+    else
+      new_rows =
+        rows
+        |> Enum.take(length(rows) - 1)
+        |> reindex_settings_qual_rows()
+
+      {:noreply, assign(socket, :settings_qual_rows, new_rows)}
+    end
   end
 
   def handle_event("save_habit_settings", params, socket) do
     habit_id = params["habit_id"]
-    has_quantity = params["has_quantity"] == "true"
+    mode = parse_tracking_mode(params["tracking_mode"] || "binary")
+
+    raw_opts = params["qualitative_options"] || %{}
+
+    qualitative_options =
+      raw_opts
+      |> Habit.build_qualitative_options_from_params()
+      |> Habit.finalize_qualitative_option_ids()
 
     attrs =
-      if has_quantity do
-        %{
-          has_quantity: true,
-          quantity_low: parse_int(params["quantity_low"], 1),
-          quantity_high: parse_int(params["quantity_high"], 10)
-        }
-      else
-        %{has_quantity: false}
+      cond do
+        mode == :quantity ->
+          %{
+            tracking_mode: :quantity,
+            quantity_low: parse_int(params["quantity_low"], 1),
+            quantity_high: parse_int(params["quantity_high"], 10)
+          }
+
+        mode == :qualitative ->
+          %{tracking_mode: :qualitative, qualitative_options: qualitative_options}
+
+        true ->
+          %{tracking_mode: :binary}
       end
 
     with {:ok, habit} <- fetch_user_habit(habit_id, socket),
-         {:ok, updated_habit} <- Habits.update_habit(habit, attrs) do
-      habits =
-        Enum.map(socket.assigns.habits, fn h ->
-          if h.id == updated_habit.id do
-            %{
-              h
-              | has_quantity: updated_habit.has_quantity,
-                quantity_low: updated_habit.quantity_low,
-                quantity_high: updated_habit.quantity_high
-            }
-          else
-            h
-          end
-        end)
+         {:ok, _updated} <- Habits.update_habit(habit, attrs) do
+      habits = Habits.list_habits(socket.assigns.current_scope.user)
 
       {:noreply,
        socket
        |> assign(:habits, habits)
        |> assign(:show_settings_modal, false)
        |> assign(:settings_habit, nil)
+       |> assign(:settings_tracking_mode, :binary)
+       |> assign(:settings_qual_rows, [])
        |> put_flash(:info, "Habit settings updated!")}
     else
       :error ->
@@ -504,8 +706,11 @@ defmodule StreaksWeb.HabitsLive.Index do
 
   @spec assign_new_habit_form(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   defp assign_new_habit_form(socket) do
-    changeset = Habit.changeset(%Habit{}, %{})
-    assign(socket, :form, to_form(changeset, as: :habit))
+    changeset = Habit.changeset(%Habit{}, %{tracking_mode: :binary})
+
+    socket
+    |> assign(:form, to_form(changeset, as: :habit))
+    |> assign(:create_qual_rows, initial_create_qual_rows(2))
   end
 
   @spec fetch_user_habit(integer() | String.t(), Phoenix.LiveView.Socket.t()) ::
@@ -637,14 +842,177 @@ defmodule StreaksWeb.HabitsLive.Index do
     end
   end
 
-  defp maybe_add_quantity_config(attrs, params) do
-    if params["has_quantity"] == "true" do
-      attrs
-      |> Map.put(:quantity_low, parse_int(params["quantity_low"], 1))
-      |> Map.put(:quantity_high, parse_int(params["quantity_high"], 10))
-    else
-      attrs
+  defp normalize_create_habit_params(habit_params, opts) do
+    raw = habit_params["qualitative_options"] || %{}
+
+    q_opts =
+      raw
+      |> Habit.build_qualitative_options_from_params()
+      |> then(fn list ->
+        if Keyword.get(opts, :finalize_qualitative_ids, false) do
+          Habit.finalize_qualitative_option_ids(list)
+        else
+          list
+        end
+      end)
+
+    Map.put(habit_params, "qualitative_options", q_opts)
+  end
+
+  defp parse_tracking_mode("binary"), do: :binary
+  defp parse_tracking_mode("quantity"), do: :quantity
+  defp parse_tracking_mode("qualitative"), do: :qualitative
+  defp parse_tracking_mode(_), do: :binary
+
+  defp settings_qual_rows_for_habit(%Habit{tracking_mode: :qualitative} = habit) do
+    opts = habit.qualitative_options || []
+    build_settings_qual_rows(opts)
+  end
+
+  defp settings_qual_rows_for_habit(%Habit{}) do
+    initial_create_qual_rows(2)
+  end
+
+  defp build_settings_qual_rows(opts) when is_list(opts) do
+    n =
+      cond do
+        opts == [] ->
+          2
+
+        length(opts) == 1 ->
+          2
+
+        true ->
+          min(5, max(2, length(opts)))
+      end
+
+    for i <- 0..(n - 1) do
+      case Enum.at(opts, i) do
+        nil ->
+          %{index: i, id: "new-#{i}", color: default_qual_color_at(i), label: ""}
+
+        o when is_map(o) ->
+          id = Map.get(o, "id") || Map.get(o, :id) || "new-#{i}"
+          color = Map.get(o, "color") || Map.get(o, :color) || default_qual_color_at(i)
+          label = Map.get(o, "label") || Map.get(o, :label) || ""
+          %{index: i, id: id, color: normalize_hex_color(color), label: label}
+      end
     end
+  end
+
+  defp reindex_settings_qual_rows(rows) do
+    rows
+    |> Enum.with_index()
+    |> Enum.map(fn {row, i} ->
+      color = Map.get(row, :color) || Map.get(row, "color") || default_qual_color_at(i)
+      label = Map.get(row, :label) || Map.get(row, "label") || ""
+      raw_id = Map.get(row, :id) || Map.get(row, "id")
+
+      id =
+        cond do
+          is_binary(raw_id) and raw_id != "" and not String.starts_with?(raw_id, "new-") ->
+            raw_id
+
+          true ->
+            "new-#{i}"
+        end
+
+      %{index: i, id: id, color: normalize_hex_color(color), label: label}
+    end)
+  end
+
+  defp initial_create_qual_rows(count) when count in 2..5 do
+    for i <- 0..(count - 1) do
+      %{index: i, id: "new-#{i}", color: default_qual_color_at(i), label: ""}
+    end
+  end
+
+  defp default_qual_color_at(i) do
+    ~w(#dc2626 #ea580c #eab308 #16a34a #2563eb)
+    |> Enum.at(i, "#6b7280")
+  end
+
+  defp build_create_qual_rows_from_params(raw_qual, fallback_rows) do
+    parsed =
+      case raw_qual do
+        %{} = m when map_size(m) > 0 ->
+          m
+          |> Enum.reject(fn {k, _} -> k in [nil, ""] end)
+          |> Enum.sort_by(fn {k, _} -> qual_form_key_to_int(k) end)
+          |> Enum.map(fn {_k, fields} ->
+            f = stringify_qual_fields(fields)
+            color = Map.get(f, "color", "#6b7280") |> normalize_hex_color()
+            label = Map.get(f, "label", "") |> to_string()
+            %{color: color, label: label}
+          end)
+
+        _ ->
+          []
+      end
+
+    rows =
+      if parsed == [] do
+        fallback_rows
+        |> List.wrap()
+        |> then(fn fb ->
+          if length(fb) >= 2 do
+            reindex_new_habit_qual_rows(fb)
+          else
+            initial_create_qual_rows(2)
+          end
+        end)
+      else
+        parsed
+        |> Enum.with_index()
+        |> Enum.map(fn {r, i} ->
+          %{index: i, id: "new-#{i}", color: r.color, label: r.label}
+        end)
+        |> Enum.take(5)
+      end
+
+    if length(rows) < 2, do: initial_create_qual_rows(2), else: rows
+  end
+
+  defp qual_form_key_to_int(k) do
+    case Integer.parse(to_string(k)) do
+      {i, _} -> i
+      :error -> 0
+    end
+  end
+
+  defp stringify_qual_fields(fields) when is_map(fields) do
+    Map.new(fields, fn {k, v} -> {to_string(k), v} end)
+  end
+
+  defp normalize_hex_color(color) when is_binary(color) do
+    c = color |> String.trim() |> String.downcase()
+
+    cond do
+      c == "" ->
+        "#6b7280"
+
+      String.starts_with?(c, "#") and String.length(c) == 7 ->
+        c
+
+      String.starts_with?(c, "#") ->
+        c
+
+      true ->
+        "#" <> c
+    end
+  end
+
+  defp normalize_hex_color(_), do: "#6b7280"
+
+  defp reindex_new_habit_qual_rows(rows) do
+    rows
+    |> Enum.with_index()
+    |> Enum.map(fn {row, i} ->
+      color = Map.get(row, :color) || Map.get(row, "color") || default_qual_color_at(i)
+      label = Map.get(row, :label) || Map.get(row, "label") || ""
+
+      %{index: i, id: "new-#{i}", color: normalize_hex_color(color), label: label}
+    end)
   end
 
   defp parse_int(nil, default), do: default

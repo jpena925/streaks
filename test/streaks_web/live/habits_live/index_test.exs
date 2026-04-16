@@ -96,7 +96,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       html =
         lv
         |> form("form[phx-submit='create_habit']", %{
-          "habit" => %{"name" => "", "has_quantity" => "false"}
+          "habit" => %{"name" => "", "tracking_mode" => "binary"}
         })
         |> render_change()
 
@@ -114,7 +114,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       html =
         lv
         |> form("form[phx-submit='create_habit']", %{
-          "habit" => %{"name" => long_name, "has_quantity" => "false"}
+          "habit" => %{"name" => long_name, "tracking_mode" => "binary"}
         })
         |> render_change()
 
@@ -136,14 +136,14 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       html =
         lv
         |> form("form[phx-submit='create_habit']", %{
-          "habit" => %{"name" => "Daily Exercise", "has_quantity" => "false"}
+          "habit" => %{"name" => "Daily Exercise", "tracking_mode" => "binary"}
         })
         |> render_submit()
 
       habits = Habits.list_habits(user)
       assert length(habits) == 1
       assert hd(habits).name == "Daily Exercise"
-      refute hd(habits).has_quantity
+      assert hd(habits).tracking_mode == :binary
 
       refute html =~ "Create New Habit"
       assert html =~ "Daily Exercise"
@@ -156,14 +156,26 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
 
       lv
       |> form("form[phx-submit='create_habit']", %{
-        "habit" => %{"name" => "Push-ups", "has_quantity" => "true"}
+        "habit" => %{"name" => "Push-ups", "tracking_mode" => "quantity"}
       })
-      |> render_submit()
+      |> render_change()
+
+      _html =
+        lv
+        |> form("form[phx-submit='create_habit']", %{
+          "habit" => %{
+            "name" => "Push-ups",
+            "tracking_mode" => "quantity",
+            "quantity_low" => "1",
+            "quantity_high" => "10"
+          }
+        })
+        |> render_submit()
 
       habits = Habits.list_habits(user)
       assert length(habits) == 1
       assert hd(habits).name == "Push-ups"
-      assert hd(habits).has_quantity
+      assert hd(habits).tracking_mode == :quantity
     end
 
     test "shows error when habit name is empty", %{conn: conn, user: user} do
@@ -174,7 +186,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
       html =
         lv
         |> form("form[phx-submit='create_habit']", %{
-          "habit" => %{"name" => "", "has_quantity" => "false"}
+          "habit" => %{"name" => "", "tracking_mode" => "binary"}
         })
         |> render_submit()
 

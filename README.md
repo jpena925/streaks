@@ -2,7 +2,8 @@
 
 A habit tracker with a GitHub-style contribution grid.
 
-<img width="734" height="557" alt="Screenshot 2025-11-17 at 6 22 46 PM" src="https://github.com/user-attachments/assets/6b2ffb89-127e-4abd-94a6-d0f125dd6682" />
+<img width="383" height="558" alt="Screenshot 2026-04-16 at 9 01 55 AM" src="https://github.com/user-attachments/assets/5d653bf2-cd74-4536-9207-4ab34ce765db" />
+<img width="386" height="561" alt="Screenshot 2026-04-16 at 9 01 40 AM" src="https://github.com/user-attachments/assets/393e7fea-ad5e-4488-aeb7-a1ce499a16a4" />
 
 
 ## Tracking habits (your options)

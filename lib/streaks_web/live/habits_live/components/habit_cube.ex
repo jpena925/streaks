@@ -117,7 +117,8 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
 
   defp cube_tooltip(_mode, _quantity, _completed, title), do: title
 
-  defp cube_inline_style(:qualitative, true, color, _quantity, _low, _high) when is_binary(color) do
+  defp cube_inline_style(:qualitative, true, color, _quantity, _low, _high)
+       when is_binary(color) do
     "--cube-glow: #{color}; background-color: #{color}; border-color: #{color}"
   end
 

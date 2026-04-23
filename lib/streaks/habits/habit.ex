@@ -18,8 +18,8 @@ defmodule Streaks.Habits.Habit do
           id: integer() | nil,
           name: String.t() | nil,
           tracking_mode: :binary | :quantity | :qualitative,
-          quantity_low: integer() | nil,
-          quantity_high: integer() | nil,
+          quantity_low: Decimal.t() | nil,
+          quantity_high: Decimal.t() | nil,
           qualitative_options: [qualitative_option()] | nil,
           archived_at: DateTime.t() | nil,
           position: integer() | nil,
@@ -33,8 +33,8 @@ defmodule Streaks.Habits.Habit do
   schema "habits" do
     field :name, :string
     field :tracking_mode, Ecto.Enum, values: [:binary, :quantity, :qualitative], default: :binary
-    field :quantity_low, :integer, default: 1
-    field :quantity_high, :integer, default: 10
+    field :quantity_low, :decimal, default: Decimal.new("1")
+    field :quantity_high, :decimal, default: Decimal.new("10")
     field :qualitative_options, {:array, :map}, default: []
     field :archived_at, :utc_datetime
     field :position, :integer
@@ -72,7 +72,7 @@ defmodule Streaks.Habits.Habit do
     low = get_field(changeset, :quantity_low)
     high = get_field(changeset, :quantity_high)
 
-    if low && high && low >= high do
+    if low && high && Decimal.compare(low, high) != :lt do
       add_error(changeset, :quantity_high, "must be greater than low value")
     else
       changeset

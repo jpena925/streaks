@@ -259,7 +259,7 @@ defmodule Streaks.HabitsTest do
 
       {:ok, completion} = Habits.log_habit_completion(habit, date, 25)
 
-      assert completion.quantity == 25
+      assert completion.quantity == Decimal.new("25")
     end
 
     test "accepts date as string and parses it" do
@@ -288,7 +288,7 @@ defmodule Streaks.HabitsTest do
       {:ok, completion2} = Habits.log_habit_completion(habit, date, 20)
 
       assert completion1.id == completion2.id
-      assert completion2.quantity == 20
+      assert completion2.quantity == Decimal.new("20")
     end
 
     test "validates quantity is positive" do

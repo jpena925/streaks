@@ -8,7 +8,7 @@ export default {
 			"fixed pointer-events-none opacity-0 transition-opacity duration-150 z-[9999]";
 		tooltip.innerHTML = `
       <div class="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap">
-        ${tooltipText}
+        <span data-tooltip-content></span>
       </div>
       <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
         <div class="border-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
@@ -16,6 +16,8 @@ export default {
     `;
 		document.body.appendChild(tooltip);
 		this.tooltip = tooltip;
+		this.tooltipContent = tooltip.querySelector("[data-tooltip-content]");
+		this.tooltipContent.textContent = tooltipText;
 
 		this.el.addEventListener("mouseenter", () => {
 			const rect = this.el.getBoundingClientRect();
@@ -34,6 +36,13 @@ export default {
 			tooltip.classList.remove("opacity-100");
 			tooltip.classList.add("opacity-0");
 		});
+	},
+
+	updated() {
+		if (!this.tooltip || !this.tooltipContent) return;
+		const tooltipText = this.el.dataset.tooltipText;
+		if (!tooltipText) return;
+		this.tooltipContent.textContent = tooltipText;
 	},
 
 	destroyed() {

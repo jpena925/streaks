@@ -7,7 +7,7 @@ defmodule Streaks.Habits.HabitCompletion do
   @type t :: %__MODULE__{
           id: integer() | nil,
           completed_on: Date.t() | nil,
-          quantity: integer() | nil,
+          quantity: Decimal.t() | nil,
           qualitative_option_id: String.t() | nil,
           qualitative_color: String.t() | nil,
           habit_id: integer() | nil,
@@ -18,7 +18,7 @@ defmodule Streaks.Habits.HabitCompletion do
 
   schema "habit_completions" do
     field :completed_on, :date
-    field :quantity, :integer
+    field :quantity, :decimal
     field :qualitative_option_id, :string
     field :qualitative_color, :string
 

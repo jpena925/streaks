@@ -210,8 +210,7 @@ defmodule Streaks.Habits do
     {:error, :invalid_completion}
   end
 
-  def log_habit_completion(%Habit{tracking_mode: :quantity} = habit, %Date{} = date, quantity)
-      when is_integer(quantity) do
+  def log_habit_completion(%Habit{tracking_mode: :quantity} = habit, %Date{} = date, quantity) do
     insert_habit_completion(habit, date, %{
       quantity: quantity,
       qualitative_option_id: nil,

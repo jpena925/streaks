@@ -1,313 +1,312 @@
-<div class="min-h-screen bg-white dark:bg-black py-6 sm:py-12 dark:text-gray-100">
-  <%!-- Loading Overlay --%>
-  <div
-    :if={@loading}
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm"
-  >
-    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-8 flex flex-col items-center gap-4">
-      <div class="w-12 h-12 border-4 border-gray-300 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin">
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="py-6 sm:py-12 dark:text-gray-100">
+    <%!-- Loading Overlay --%>
+    <div
+      :if={@loading}
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm"
+    >
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-8 flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-4 border-gray-300 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin">
+        </div>
+        <p class="text-gray-900 dark:text-white text-sm font-medium">Loading...</p>
       </div>
-      <p class="text-gray-900 dark:text-white text-sm font-medium">Loading...</p>
     </div>
-  </div>
 
-  <div class="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-normal text-gray-900 dark:text-white">
-          Your Streaks
-        </h1>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-          Keep track of when you do things.
-        </p>
+    <div class="mx-auto max-w-7xl px-0 sm:px-1 lg:px-2">
+      <!-- Header -->
+      <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-normal text-gray-900 dark:text-white">
+            Your Streaks
+          </h1>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+            Keep track of when you do things.
+          </p>
+        </div>
+
+        <.primary_button
+          :if={!@show_new_habit_form}
+          phx-click="show_new_habit_form"
+          icon="hero-plus"
+          class="w-full sm:w-auto"
+        >
+          Add Habit
+        </.primary_button>
       </div>
-
-      <.primary_button
-        :if={!@show_new_habit_form}
-        phx-click="show_new_habit_form"
-        icon="hero-plus"
-        class="w-full sm:w-auto"
-      >
-        Add Habit
-      </.primary_button>
-    </div>
-    
+      
 <!-- New Habit Form -->
-    <.card :if={@show_new_habit_form} class="mb-6 p-4">
-      <h3 class="text-sm font-normal text-gray-900 dark:text-white mb-3">
-        Create New Habit
-      </h3>
-      <.form for={@form} phx-submit="create_habit" phx-change="validate" class="space-y-3">
-        <.input
-          field={@form[:name]}
-          type="text"
-          placeholder="Habit name..."
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
-          required
-          autofocus
-        />
-
-        <div class="space-y-2">
-          <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
-            Tracking type
-          </label>
+      <.card :if={@show_new_habit_form} class="mb-6 p-4">
+        <h3 class="text-sm font-normal text-gray-900 dark:text-white mb-3">
+          Create New Habit
+        </h3>
+        <.form for={@form} phx-submit="create_habit" phx-change="validate" class="space-y-3">
           <.input
-            field={@form[:tracking_mode]}
-            type="select"
-            options={[
-              {"Yes / no", "binary"},
-              {"Number (gradient)", "quantity"},
-              {"Qualitative (colors)", "qualitative"}
-            ]}
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
+            field={@form[:name]}
+            type="text"
+            placeholder="Habit name..."
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
+            required
+            autofocus
           />
-        </div>
-
-        <div
-          :if={Enum.member?([:quantity, "quantity"], @form[:tracking_mode].value)}
-          class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
-        >
-          <p class="text-xs text-gray-500 dark:text-gray-500">
-            What range do you expect?
-          </p>
-          <div class="flex gap-3 items-center">
-            <div class="flex-1">
-              <.input
-                field={@form[:quantity_low]}
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="Low"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
-              />
-              <span class="text-xs text-gray-400 dark:text-gray-600">Lightest</span>
-            </div>
-            <span class="text-gray-400 dark:text-gray-600">→</span>
-            <div class="flex-1">
-              <.input
-                field={@form[:quantity_high]}
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="High"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
-              />
-              <span class="text-xs text-gray-400 dark:text-gray-600">Darkest</span>
-            </div>
-          </div>
-        </div>
-
-        <div
-          :if={Enum.member?([:qualitative, "qualitative"], @form[:tracking_mode].value)}
-          class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
-        >
-          <p class="text-xs text-gray-500 dark:text-gray-500">
-            Start with two levels and add up to five. Meanings are only shown here.
-          </p>
-          <div
-            :for={row <- @create_qual_rows}
-            class="flex flex-col sm:flex-row gap-2 sm:items-end"
-          >
-            <input
-              type="hidden"
-              name={"habit[qualitative_options][#{row.index}][id]"}
-              value={row.id}
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Tracking type
+            </label>
+            <.input
+              field={@form[:tracking_mode]}
+              type="select"
+              options={[
+                {"Yes / no", "binary"},
+                {"Number (gradient)", "quantity"},
+                {"Qualitative (colors)", "qualitative"}
+              ]}
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
             />
-            <div class="flex items-center gap-2">
-              <input
-                type="color"
-                name={"habit[qualitative_options][#{row.index}][color]"}
-                value={row.color}
-                class="h-10 w-14 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
-              />
-            </div>
-            <div class="flex-1">
-              <label class="text-xs text-gray-400 dark:text-gray-600 block mb-1">
-                Meaning (setup only)
-              </label>
-              <input
-                type="text"
-                name={"habit[qualitative_options][#{row.index}][label]"}
-                value={row.label}
-                placeholder="e.g. Rough day"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 rounded text-sm"
-              />
-            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2 pt-1">
-            <button
-              type="button"
-              phx-click="create_qual_add_row"
-              disabled={length(@create_qual_rows) >= 5}
-              class={[
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
-                if(length(@create_qual_rows) >= 5,
-                  do:
-                    "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
-                  else:
-                    "border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-gray-900 dark:hover:border-gray-400"
-                )
-              ]}
-            >
-              <.icon name="hero-plus" class="w-3.5 h-3.5" /> Add level
-            </button>
-            <button
-              type="button"
-              phx-click="create_qual_remove_row"
-              disabled={length(@create_qual_rows) <= 2}
-              class={[
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
-                if(length(@create_qual_rows) <= 2,
-                  do:
-                    "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
-                  else:
-                    "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-gray-400"
-                )
-              ]}
-            >
-              <.icon name="hero-minus" class="w-3.5 h-3.5" /> Remove last
-            </button>
-          </div>
-        </div>
 
-        <div class="flex gap-2">
-          <.primary_button type="submit" class="flex-1 sm:flex-none">
-            Create
-          </.primary_button>
-          <button
-            type="button"
-            phx-click="hide_new_habit_form"
-            class="flex-1 sm:flex-none border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-gray-100 px-4 py-2 transition-colors text-sm"
+          <div
+            :if={Enum.member?([:quantity, "quantity"], @form[:tracking_mode].value)}
+            class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
           >
-            Cancel
+            <p class="text-xs text-gray-500 dark:text-gray-500">
+              What range do you expect?
+            </p>
+            <div class="flex gap-3 items-center">
+              <div class="flex-1">
+                <.input
+                  field={@form[:quantity_low]}
+                  type="number"
+                  min="1"
+                  placeholder="Low"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
+                />
+                <span class="text-xs text-gray-400 dark:text-gray-600">Lightest</span>
+              </div>
+              <span class="text-gray-400 dark:text-gray-600">→</span>
+              <div class="flex-1">
+                <.input
+                  field={@form[:quantity_high]}
+                  type="number"
+                  min="1"
+                  placeholder="High"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 transition-colors text-sm"
+                />
+                <span class="text-xs text-gray-400 dark:text-gray-600">Darkest</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            :if={Enum.member?([:qualitative, "qualitative"], @form[:tracking_mode].value)}
+            class="pl-2 space-y-3 border-l-2 border-gray-200 dark:border-gray-700"
+          >
+            <p class="text-xs text-gray-500 dark:text-gray-500">
+              Start with two levels and add up to five. Meanings are only shown here.
+            </p>
+            <div
+              :for={row <- @create_qual_rows}
+              class="flex flex-col sm:flex-row gap-2 sm:items-end"
+            >
+              <input
+                type="hidden"
+                name={"habit[qualitative_options][#{row.index}][id]"}
+                value={row.id}
+              />
+              <div class="flex items-center gap-2">
+                <input
+                  type="color"
+                  name={"habit[qualitative_options][#{row.index}][color]"}
+                  value={row.color}
+                  class="h-10 w-14 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
+                />
+              </div>
+              <div class="flex-1">
+                <label class="text-xs text-gray-400 dark:text-gray-600 block mb-1">
+                  Meaning (setup only)
+                </label>
+                <input
+                  type="text"
+                  name={"habit[qualitative_options][#{row.index}][label]"}
+                  value={row.label}
+                  placeholder="e.g. Rough day"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-gray-100 rounded text-sm"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                phx-click="create_qual_add_row"
+                disabled={length(@create_qual_rows) >= 5}
+                class={[
+                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
+                  if(length(@create_qual_rows) >= 5,
+                    do:
+                      "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
+                    else:
+                      "border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-gray-900 dark:hover:border-gray-400"
+                  )
+                ]}
+              >
+                <.icon name="hero-plus" class="w-3.5 h-3.5" /> Add level
+              </button>
+              <button
+                type="button"
+                phx-click="create_qual_remove_row"
+                disabled={length(@create_qual_rows) <= 2}
+                class={[
+                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium border transition-colors",
+                  if(length(@create_qual_rows) <= 2,
+                    do:
+                      "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400",
+                    else:
+                      "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-gray-400"
+                  )
+                ]}
+              >
+                <.icon name="hero-minus" class="w-3.5 h-3.5" /> Remove last
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <.primary_button type="submit" class="flex-1 sm:flex-none">
+              Create
+            </.primary_button>
+            <button
+              type="button"
+              phx-click="hide_new_habit_form"
+              class="flex-1 sm:flex-none border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-gray-100 px-4 py-2 transition-colors text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </.form>
+      </.card>
+      
+<!-- Empty State -->
+      <div :if={@habits == []} class="text-center py-20">
+        <svg
+          class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          >
+          </path>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No habits yet</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Create your first habit to start building your streaks!
+        </p>
+        <.primary_button phx-click="show_new_habit_form" icon="hero-plus">
+          Create Your First Habit
+        </.primary_button>
+      </div>
+      
+<!-- Habits List -->
+      <div id="habits-list" class="space-y-6">
+        <HabitCard.habit_card
+          :for={{habit, index} <- Enum.with_index(@habits)}
+          habit={habit}
+          current_user={@current_scope.user}
+          timezone={@timezone}
+          is_first={index == 0}
+          is_last={index == length(@habits) - 1}
+          weekly_notes_map={Map.get(@weekly_notes_by_habit, habit.id, %{})}
+        />
+      </div>
+
+      <%!-- Archived Habits Section --%>
+      <div :if={@archived_habits != []} class="mt-12">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-normal text-gray-600 dark:text-gray-400">
+            Archived Habits ({length(@archived_habits)})
+          </h2>
+          <button
+            phx-click="toggle_archived"
+            class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+          >
+            <span :if={!@show_archived}>Show</span>
+            <span :if={@show_archived}>Hide</span>
+            <.icon
+              name={if(@show_archived, do: "hero-chevron-up", else: "hero-chevron-down")}
+              class="w-4 h-4"
+            />
           </button>
         </div>
-      </.form>
-    </.card>
-    
-<!-- Empty State -->
-    <div :if={@habits == []} class="text-center py-20">
-      <svg
-        class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-        >
-        </path>
-      </svg>
-      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No habits yet</h3>
-      <p class="text-gray-600 dark:text-gray-400 mb-6">
-        Create your first habit to start building your streaks!
-      </p>
-      <.primary_button phx-click="show_new_habit_form" icon="hero-plus">
-        Create Your First Habit
-      </.primary_button>
-    </div>
-    
-<!-- Habits List -->
-    <div id="habits-list" class="space-y-6">
-      <HabitCard.habit_card
-        :for={{habit, index} <- Enum.with_index(@habits)}
-        habit={habit}
-        current_user={@current_scope.user}
-        timezone={@timezone}
-        is_first={index == 0}
-        is_last={index == length(@habits) - 1}
-        weekly_notes_map={Map.get(@weekly_notes_by_habit, habit.id, %{})}
+
+        <div :if={@show_archived} class="space-y-4">
+          <.card
+            :for={habit <- @archived_habits}
+            class="opacity-75 hover:opacity-100 transition-opacity"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="text-base font-normal text-gray-700 dark:text-gray-300">
+                  {habit.name}
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  Archived {format_relative_time(habit.archived_at)}
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  phx-click="unarchive_habit"
+                  phx-value-id={habit.id}
+                  class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-700 hover:border-gray-900 dark:hover:border-gray-100 transition-colors"
+                  title="Restore habit"
+                >
+                  <.icon name="hero-arrow-uturn-left" class="w-4 h-4 inline mr-1" /> Restore
+                </button>
+                <.icon_button
+                  phx-click="delete_habit"
+                  phx-value-id={habit.id}
+                  data-confirm="Permanently delete this habit? This cannot be undone and will delete all completion data."
+                  icon="hero-trash"
+                  title="Delete permanently"
+                  class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                />
+              </div>
+            </div>
+          </.card>
+        </div>
+      </div>
+      
+<!-- Quantity Input Modal -->
+      <QuantityModal.quantity_modal
+        show={@show_quantity_modal}
+        quantity_value={@quantity_value}
+        is_edit_mode={@is_edit_mode}
+      />
+
+      <QualitativeModal.qualitative_modal
+        show={@show_qualitative_modal}
+        options={@qualitative_modal_options}
+        is_edit_mode={@qualitative_is_edit}
+      />
+      
+<!-- Habit Settings Modal -->
+      <HabitSettingsModal.habit_settings_modal
+        show={@show_settings_modal}
+        habit={@settings_habit}
+        tracking_mode={@settings_tracking_mode}
+        qual_rows={@settings_qual_rows}
+      />
+      
+<!-- Weekly Note Modal -->
+      <WeeklyNoteModal.weekly_note_modal
+        show={@show_weekly_note_modal}
+        year={@weekly_note_year}
+        week_number={@weekly_note_week}
+        notes={@weekly_note_text}
+        has_existing_note={@weekly_note_has_existing}
       />
     </div>
-
-    <%!-- Archived Habits Section --%>
-    <div :if={@archived_habits != []} class="mt-12">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-normal text-gray-600 dark:text-gray-400">
-          Archived Habits ({length(@archived_habits)})
-        </h2>
-        <button
-          phx-click="toggle_archived"
-          class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
-        >
-          <span :if={!@show_archived}>Show</span>
-          <span :if={@show_archived}>Hide</span>
-          <.icon
-            name={if(@show_archived, do: "hero-chevron-up", else: "hero-chevron-down")}
-            class="w-4 h-4"
-          />
-        </button>
-      </div>
-
-      <div :if={@show_archived} class="space-y-4">
-        <.card
-          :for={habit <- @archived_habits}
-          class="opacity-75 hover:opacity-100 transition-opacity"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <h3 class="text-base font-normal text-gray-700 dark:text-gray-300">
-                {habit.name}
-              </h3>
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                Archived {format_relative_time(habit.archived_at)}
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                phx-click="unarchive_habit"
-                phx-value-id={habit.id}
-                class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-700 hover:border-gray-900 dark:hover:border-gray-100 transition-colors"
-                title="Restore habit"
-              >
-                <.icon name="hero-arrow-uturn-left" class="w-4 h-4 inline mr-1" /> Restore
-              </button>
-              <.icon_button
-                phx-click="delete_habit"
-                phx-value-id={habit.id}
-                data-confirm="Permanently delete this habit? This cannot be undone and will delete all completion data."
-                icon="hero-trash"
-                title="Delete permanently"
-                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-              />
-            </div>
-          </div>
-        </.card>
-      </div>
-    </div>
-    
-<!-- Quantity Input Modal -->
-    <QuantityModal.quantity_modal
-      show={@show_quantity_modal}
-      quantity_value={@quantity_value}
-      is_edit_mode={@is_edit_mode}
-    />
-
-    <QualitativeModal.qualitative_modal
-      show={@show_qualitative_modal}
-      options={@qualitative_modal_options}
-      is_edit_mode={@qualitative_is_edit}
-    />
-    
-<!-- Habit Settings Modal -->
-    <HabitSettingsModal.habit_settings_modal
-      show={@show_settings_modal}
-      habit={@settings_habit}
-      tracking_mode={@settings_tracking_mode}
-      qual_rows={@settings_qual_rows}
-    />
-    
-<!-- Weekly Note Modal -->
-    <WeeklyNoteModal.weekly_note_modal
-      show={@show_weekly_note_modal}
-      year={@weekly_note_year}
-      week_number={@weekly_note_week}
-      notes={@weekly_note_text}
-      has_existing_note={@weekly_note_has_existing}
-    />
   </div>
-</div>
+</Layouts.app>

@@ -36,12 +36,12 @@ defmodule StreaksWeb.HabitsLive.QuantityModal do
                 type="number"
                 name="quantity"
                 value={@quantity_value}
-                min="1"
-                step="1"
+                min="0.01"
+                step="0.01"
                 autofocus
                 required
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent transition-colors text-base"
-                placeholder="e.g., 5"
+                placeholder="e.g., 0.5"
               />
             </div>
 

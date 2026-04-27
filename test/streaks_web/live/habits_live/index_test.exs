@@ -412,7 +412,7 @@ defmodule StreaksWeb.HabitsLive.IndexTest do
 
       updated_habit = Habits.get_habit(habit.id, user)
       assert length(updated_habit.completions) == 1
-      assert hd(updated_habit.completions).quantity == 25
+      assert hd(updated_habit.completions).quantity == Decimal.new("25")
 
       refute html =~ "Enter Quantity"
     end

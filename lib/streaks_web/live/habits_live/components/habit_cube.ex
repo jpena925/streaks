@@ -10,15 +10,15 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   attr :is_today, :boolean, default: false
   attr :is_future, :boolean, default: false
   attr :tracking_mode, :atom, default: :binary
-  attr :quantity_low, :integer, default: 1
-  attr :quantity_high, :integer, default: 10
+  attr :quantity_low, :any, default: Decimal.new("1")
+  attr :quantity_high, :any, default: Decimal.new("10")
 
   def habit_cube(assigns) do
     title = Date.to_iso8601(assigns.date)
 
     quantity =
       case assigns.completion do
-        %HabitCompletion{quantity: q} when is_integer(q) -> q
+        %HabitCompletion{quantity: %Decimal{} = q} -> q
         _ -> nil
       end
 
@@ -37,12 +37,23 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
         assigns.quantity_high
       )
 
+    inline_style =
+      cube_inline_style(
+        assigns.tracking_mode,
+        assigns.completed,
+        qualitative_color,
+        quantity,
+        assigns.quantity_low,
+        assigns.quantity_high
+      )
+
     assigns =
       assigns
       |> assign(:title, title)
       |> assign(:quantity, quantity)
       |> assign(:qualitative_color, qualitative_color)
       |> assign(:completed_classes, completed_classes)
+      |> assign(:inline_style, inline_style)
 
     ~H"""
     <div
@@ -94,27 +105,50 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
       data-tooltip-text={
         if(@quantity && @completed && @tracking_mode == :quantity, do: "#{@quantity}", else: nil)
       }
-      style={cube_inline_style(@tracking_mode, @completed, @qualitative_color)}
+      style={@inline_style}
     >
     </div>
     """
   end
 
   defp cube_tooltip(:quantity, quantity, completed, _title)
-       when completed and is_integer(quantity),
+       when completed and is_struct(quantity, Decimal),
        do: nil
 
   defp cube_tooltip(_mode, _quantity, _completed, title), do: title
 
-  defp cube_inline_style(:qualitative, true, color) when is_binary(color) do
+  defp cube_inline_style(:qualitative, true, color, _quantity, _low, _high)
+       when is_binary(color) do
     "--cube-glow: #{color}; background-color: #{color}; border-color: #{color}"
   end
 
-  defp cube_inline_style(_mode, true, _color) do
+  defp cube_inline_style(:quantity, true, _color, %Decimal{} = quantity, low, high) do
+    pct = intensity_percent(quantity, low, high)
+
+    # Make the scale feel more "linear" and readable by blending between
+    # a light green (floor) and a deeper green (ceiling). This avoids the
+    # low end looking like a transparent outline and makes the max darker.
+    floor = "#4ade80"
+    ceiling = "#15803d"
+    border_floor = "#22c55e"
+    border_ceiling = "#14532d"
+
+    fill = "color-mix(in oklab, #{floor} #{100 - pct}%, #{ceiling} #{pct}%)"
+    border = "color-mix(in oklab, #{border_floor} #{100 - pct}%, #{border_ceiling} #{pct}%)"
+    glow = "color-mix(in oklab, #22c55e #{min(100, 35 + trunc(pct * 0.45))}%, transparent)"
+
+    "--cube-glow: #{glow}; background-color: #{fill}; border-color: #{border}"
+  end
+
+  defp cube_inline_style(:quantity, true, _color, _quantity, _low, _high) do
     "--cube-glow: #22c55e"
   end
 
-  defp cube_inline_style(_mode, _completed, _color), do: nil
+  defp cube_inline_style(_mode, true, _color, _quantity, _low, _high) do
+    "--cube-glow: #22c55e"
+  end
+
+  defp cube_inline_style(_mode, _completed, _color, _quantity, _low, _high), do: nil
 
   defp cube_fill_classes(:qualitative, _q, color, _low, _high) when is_binary(color) do
     "border-2"
@@ -141,32 +175,26 @@ defmodule StreaksWeb.HabitsLive.HabitCube do
   end
 
   defp quantity_intensity_class(quantity, low, high) do
-    level = intensity_level(quantity, low, high)
-
-    case level do
-      1 -> "bg-green-400/70 dark:bg-green-300 border-green-500 dark:border-green-200"
-      2 -> "bg-green-400 dark:bg-green-400 border-green-500 dark:border-green-300"
-      3 -> "bg-green-500 dark:bg-green-500 border-green-600 dark:border-green-400"
-      4 -> "bg-green-600 dark:bg-green-600 border-green-700 dark:border-green-500"
-      _ -> "bg-green-700 dark:bg-green-700 border-green-800 dark:border-green-600"
-    end
+    # Continuous, linear gradient is applied via inline styles (see `cube_inline_style/6`).
+    # Keep a baseline border so "completed" never reads as outline-only.
+    _ = intensity_percent(quantity, low, high)
+    "border"
   end
 
-  defp intensity_level(quantity, low, high) when high > low do
-    range = high - low
+  defp intensity_percent(quantity, low, high) do
+    quantity_f = as_float(quantity)
+    low_f = as_float(low)
+    high_f = as_float(high)
 
-    cond do
-      quantity <= low ->
-        1
+    range = max(high_f - low_f, 0.000001)
+    normalized = (quantity_f - low_f) / range
+    normalized = min(1.0, max(0.0, normalized))
 
-      quantity >= high ->
-        5
-
-      true ->
-        normalized = (quantity - low) / range
-        trunc(normalized * 4) + 1
-    end
+    trunc(normalized * 100)
   end
 
-  defp intensity_level(_quantity, _low, _high), do: 3
+  defp as_float(%Decimal{} = d), do: Decimal.to_float(d)
+  defp as_float(i) when is_integer(i), do: i * 1.0
+  defp as_float(f) when is_float(f), do: f
+  defp as_float(_), do: 0.0
 end

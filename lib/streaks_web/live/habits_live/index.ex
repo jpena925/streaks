@@ -151,8 +151,8 @@ defmodule StreaksWeb.HabitsLive.Index do
     attrs =
       if mode == :quantity do
         attrs
-        |> Map.put(:quantity_low, parse_int(habit_params["quantity_low"], 1))
-        |> Map.put(:quantity_high, parse_int(habit_params["quantity_high"], 10))
+        |> Map.put(:quantity_low, parse_decimal(habit_params["quantity_low"], "1"))
+        |> Map.put(:quantity_high, parse_decimal(habit_params["quantity_high"], "10"))
       else
         attrs
       end
@@ -341,8 +341,7 @@ defmodule StreaksWeb.HabitsLive.Index do
   end
 
   def handle_event("submit_quantity", %{"quantity" => quantity_str}, socket) do
-    with {quantity, _} <- Integer.parse(quantity_str),
-         true <- quantity > 0,
+    with {:ok, quantity} <- parse_decimal_str(quantity_str),
          {:ok, habit} <- fetch_user_habit(socket.assigns.quantity_habit_id, socket),
          {:ok, completion} <-
            Habits.log_habit_completion(habit, socket.assigns.quantity_date, quantity) do
@@ -555,8 +554,8 @@ defmodule StreaksWeb.HabitsLive.Index do
         mode == :quantity ->
           %{
             tracking_mode: :quantity,
-            quantity_low: parse_int(params["quantity_low"], 1),
-            quantity_high: parse_int(params["quantity_high"], 10)
+            quantity_low: parse_decimal(params["quantity_low"], "1"),
+            quantity_high: parse_decimal(params["quantity_high"], "10")
           }
 
         mode == :qualitative ->
@@ -1015,13 +1014,23 @@ defmodule StreaksWeb.HabitsLive.Index do
     end)
   end
 
-  defp parse_int(nil, default), do: default
-  defp parse_int("", default), do: default
+  defp parse_decimal(nil, default_str), do: Decimal.new(default_str)
+  defp parse_decimal("", default_str), do: Decimal.new(default_str)
 
-  defp parse_int(value, default) when is_binary(value) do
-    case Integer.parse(value) do
-      {int, _} -> int
-      :error -> default
+  defp parse_decimal(value, default_str) when is_binary(value) do
+    case Decimal.parse(String.trim(value)) do
+      {d, ""} -> d
+      _ -> Decimal.new(default_str)
+    end
+  end
+
+  defp parse_decimal_str(value) when is_binary(value) do
+    case Decimal.parse(String.trim(value)) do
+      {d, ""} ->
+        if Decimal.compare(d, 0) == :gt, do: {:ok, d}, else: {:error, :invalid_decimal}
+
+      _ ->
+        {:error, :invalid_decimal}
     end
   end
 

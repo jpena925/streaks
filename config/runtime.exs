@@ -34,6 +34,9 @@ if config_env() == :prod do
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6,
+    # Avoid Postgres "cached plan must not change result type" crashes during/after
+    # deploys that run migrations which change column types.
+    prepare: :unnamed,
     ssl: [
       verify: :verify_none,
       cacerts: :public_key.cacerts_get()

@@ -373,6 +373,34 @@ defmodule Streaks.HabitsTest do
       assert streaks.current_streak == 0
     end
 
+    test "current streak counts through yesterday when today is not logged" do
+      user = user_fixture()
+      today = Date.utc_today()
+
+      dates =
+        for day_offset <- 1..10, do: Date.add(today, -day_offset)
+
+      habit = habit_with_completions_fixture(user, dates)
+
+      streaks = Habits.calculate_streaks(habit, "UTC")
+
+      assert streaks.current_streak == 10
+      assert streaks.longest_streak == 10
+    end
+
+    test "current streak is 0 if last completion was yesterday but streak has a gap" do
+      user = user_fixture()
+      today = Date.utc_today()
+      yesterday = Date.add(today, -1)
+      three_days_ago = Date.add(today, -3)
+
+      habit = habit_with_completions_fixture(user, [three_days_ago, yesterday])
+
+      streaks = Habits.calculate_streaks(habit, "UTC")
+
+      assert streaks.current_streak == 1
+    end
+
     test "calculates longest streak correctly" do
       user = user_fixture()
       today = Date.utc_today()

@@ -358,12 +358,13 @@ defmodule Streaks.Habits do
 
   defp calculate_current_streak(dates, today) do
     latest_date = List.last(dates)
-    days_since_latest = Date.diff(today, latest_date)
+    yesterday = Date.add(today, -1)
 
-    if days_since_latest > 1 do
+    if Date.compare(latest_date, yesterday) == :lt do
       0
     else
-      count_consecutive_days(Enum.reverse(dates), today, 0)
+      reference_date = if latest_date == today, do: today, else: yesterday
+      count_consecutive_days(Enum.reverse(dates), reference_date, 0)
     end
   end
 

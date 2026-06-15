@@ -36,8 +36,7 @@ defmodule StreaksWeb.HabitsLive.QualitativeModal do
               phx-value-option_id={opt["id"] || opt[:id]}
               class="w-14 h-14 rounded-lg border-2 border-black/10 dark:border-white/10 shadow-sm hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 dark:focus:ring-white"
               style={"background-color: #{opt["color"] || opt[:color]}"}
-            >
-            </button>
+            ></button>
           </div>
 
           <div class="flex gap-3 mt-6">

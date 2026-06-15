@@ -77,8 +77,8 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             class="text-lg sm:text-xl font-normal text-gray-900 dark:text-white bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-gray-900 focus:px-2 focus:py-1 transition-colors flex-1"
           />
         </div>
-        
-    <!-- Stats and Delete Button Row -->
+
+        <!-- Stats and Delete Button Row -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-wrap">
             <!-- Current streak badge -->
@@ -89,14 +89,14 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             >
               {@streaks.current_streak} day{if @streaks.current_streak != 1, do: "s", else: ""}
             </.badge>
-            
-    <!-- Longest streak -->
+
+            <!-- Longest streak -->
             <.badge variant="info" icon="hero-sparkles">
               Best: {@streaks.longest_streak}
             </.badge>
           </div>
-          
-    <!-- Action buttons -->
+
+          <!-- Action buttons -->
           <div class="flex items-center gap-1">
             <.icon_button
               phx-click="open_settings_modal"
@@ -114,8 +114,8 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
           </div>
         </div>
       </div>
-      
-    <!-- Grid container -->
+
+      <!-- Grid container -->
       <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
         <!-- Scrollable container for both labels and grid -->
         <div
@@ -178,8 +178,8 @@ defmodule StreaksWeb.HabitsLive.HabitCard do
             </div>
           </div>
         </div>
-        
-    <!-- Legend -->
+
+        <!-- Legend -->
         <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-700 dark:text-gray-300">
           <div class="flex items-center gap-1.5 sm:gap-2">
             <div class="w-3 h-3 bg-gray-200 dark:bg-gray-800 border border-gray-400 dark:border-gray-600 rounded-sm">

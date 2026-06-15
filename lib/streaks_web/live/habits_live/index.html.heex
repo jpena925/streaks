@@ -33,8 +33,8 @@
           Add Habit
         </.primary_button>
       </div>
-      
-<!-- New Habit Form -->
+
+      <!-- New Habit Form -->
       <.card :if={@show_new_habit_form} class="mb-6 p-4">
         <h3 class="text-sm font-normal text-gray-900 dark:text-white mb-3">
           Create New Habit
@@ -183,8 +183,8 @@
           </div>
         </.form>
       </.card>
-      
-<!-- Empty State -->
+
+      <!-- Empty State -->
       <div :if={@habits == []} class="text-center py-20">
         <svg
           class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4"
@@ -208,8 +208,8 @@
           Create Your First Habit
         </.primary_button>
       </div>
-      
-<!-- Habits List -->
+
+      <!-- Habits List -->
       <div id="habits-list" class="space-y-6">
         <HabitCard.habit_card
           :for={{habit, index} <- Enum.with_index(@habits)}
@@ -277,8 +277,8 @@
           </.card>
         </div>
       </div>
-      
-<!-- Quantity Input Modal -->
+
+      <!-- Quantity Input Modal -->
       <QuantityModal.quantity_modal
         show={@show_quantity_modal}
         quantity_value={@quantity_value}
@@ -290,16 +290,16 @@
         options={@qualitative_modal_options}
         is_edit_mode={@qualitative_is_edit}
       />
-      
-<!-- Habit Settings Modal -->
+
+      <!-- Habit Settings Modal -->
       <HabitSettingsModal.habit_settings_modal
         show={@show_settings_modal}
         habit={@settings_habit}
         tracking_mode={@settings_tracking_mode}
         qual_rows={@settings_qual_rows}
       />
-      
-<!-- Weekly Note Modal -->
+
+      <!-- Weekly Note Modal -->
       <WeeklyNoteModal.weekly_note_modal
         show={@show_weekly_note_modal}
         year={@weekly_note_year}

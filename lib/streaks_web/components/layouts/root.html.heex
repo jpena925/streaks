@@ -66,8 +66,8 @@
               <span>streaks</span>
             </.link>
           </div>
-          
-<!-- Navigation Links -->
+
+          <!-- Navigation Links -->
           <div class="flex items-center gap-2 sm:gap-1">
             <%= if @current_scope do %>
               <!-- Streaks link - pixel grid icon -->
@@ -89,8 +89,8 @@
                   <rect x="14" y="14" width="4" height="4" opacity="0.3" />
                 </svg>
               </.link>
-              
-<!-- Settings link - pixelated gear -->
+
+              <!-- Settings link - pixelated gear -->
               <.link
                 href={~p"/users/settings"}
                 class="flex items-center gap-1.5 px-2 sm:px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all font-medium"
@@ -110,8 +110,8 @@
                   <rect x="8" y="8" width="4" height="4" fill="white" class="dark:fill-black" />
                 </svg>
               </.link>
-              
-<!-- Log out link - pixelated exit arrow -->
+
+              <!-- Log out link - pixelated exit arrow -->
               <.link
                 href={~p"/users/log-out"}
                 method="delete"
@@ -137,8 +137,8 @@
               >
                 Register
               </.link>
-              
-<!-- Log in link -->
+
+              <!-- Log in link -->
               <.link
                 href={~p"/users/log-in"}
                 class="px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded transition-colors font-semibold"

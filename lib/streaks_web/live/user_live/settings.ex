@@ -16,8 +16,8 @@ defmodule StreaksWeb.UserLive.Settings do
             Manage your account preferences and security settings
           </p>
         </div>
-        
-    <!-- Appearance Section -->
+
+        <!-- Appearance Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -62,8 +62,8 @@ defmodule StreaksWeb.UserLive.Settings do
             </div>
           </div>
         </div>
-        
-    <!-- Account Section -->
+
+        <!-- Account Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -94,8 +94,8 @@ defmodule StreaksWeb.UserLive.Settings do
             </div>
           </.form>
         </div>
-        
-    <!-- Security Section -->
+
+        <!-- Security Section -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
